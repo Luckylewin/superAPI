@@ -515,14 +515,15 @@ class ottService extends common
         return ['status' => true, 'data' => $response];
     }
 
-    /**
-     * 获取全部的预告数据
-     * @return array
-     */
+    // 获取全部的预告数据
     public function getEPG()
     {
-        $version = $this->post('version', 0);
-        $genre = $this->post('genre', null, ['string']);
+        try {
+            $version = $this->post('version', 0);
+            $genre = $this->post('genre', null, ['string']);
+        } catch (\Exception $e) {
+            return ['status' => true, 'error' => ErrorCode::$RES_ERROR_PARAMETER];
+        }
 
         $redisKey = "ALL_" . strtoupper($genre) . "_PARADE_LIST";
         $redisDB = Redis::$REDIS_EPG;
@@ -573,7 +574,7 @@ class ottService extends common
         $response['items'] = $parade ;
 
         $this->getRedis($redisDB)->set($redisKey, json_encode($response));
-        $this->getRedis($redisDB)->expire($redisKey, strtotime('tomorrow') - time());
+        $this->getRedis($redisDB)->expire($redisKey, 3600);
 
         if (empty($parade)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
