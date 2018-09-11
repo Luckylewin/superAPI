@@ -30,7 +30,7 @@ class App
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();
-        echo "框架初始化",PHP_EOL;
+        //echo "框架初始化",PHP_EOL;
     }
 
     // 框架运行
@@ -67,7 +67,7 @@ class App
             }
 
         } catch (\Exception $e) {
-            var_dump($e->getMessage());
+            echo $e->getMessage(), PHP_EOL;
         } finally {
             $response = Response::bulid($result, $conf);
             $connection->send($response);
