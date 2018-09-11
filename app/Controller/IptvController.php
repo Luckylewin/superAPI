@@ -35,7 +35,8 @@ class IptvController extends BaseController
         if ($url) {
             Http::header("location:{$url}");
         }
-        return '';
+
+        return '空空如也';
     }
 
     public function __call($name, $arguments)
@@ -85,7 +86,7 @@ class IptvController extends BaseController
         $c = isset($data['class'])? $data['class'] : $data['header'];
 
         if ($c == 'local') {
-            return 'success';
+            return false;
         }
 
         $class = $this->newObject($c);
