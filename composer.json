@@ -1,0 +1,30 @@
+{
+    "name": "root/test-breeze",
+
+    "authors": [
+        {
+            "name": "liziying",
+            "email": "876505905@qq.com"
+        }
+    ],
+
+    "require": {
+        "workerman/workerman": "^3.5",
+        "illuminate/database": "^5.6",
+        "aliyuncs/oss-sdk-php": "^2.3",
+        "snoopy/snoopy": "^2.0",
+        "endroid/qr-code": "^3.2",
+        "paypal/rest-api-sdk-php": "^1.13",
+        "guzzlehttp/guzzle": "^6.3"
+    },
+
+    "repositories": {
+    },
+
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Breeze\\": "framework/"
+        }
+    }
+}
