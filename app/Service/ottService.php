@@ -110,9 +110,13 @@ class ottService extends common
      */
     public function getMajorEvent()
     {
-        $day = $this->post('day', 7, ['integer','min'=>1,'max' => 7]);
-        $language = $this->post('lang', 'en');
-        $timezone = $this->post('timezone', '+8');
+        try {
+            $day = $this->post('day', 7, ['integer','min'=>1,'max' => 7]);
+            $language = $this->post('lang', 'en');
+            $timezone = $this->post('timezone', '+8');
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => $e->getCode()];
+        }
 
         $language = strtolower($language);
 
@@ -402,7 +406,7 @@ class ottService extends common
             $country = $this->post('country', '');
             $type = $this->post('type', '');
             $genre = $country ? $country : $type;
-        }catch (\InvalidArgumentException $e) {
+        }catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -475,7 +479,12 @@ class ottService extends common
      */
     public function getRegex()
     {
-        $version = $this->post('version', 0);
+        try {
+            $version = $this->post('version', 0);
+        }catch (\Exception $e) {
+            return ['status' => false, 'code' => $e->getCode()];
+        }
+
 
         //查缓存
         $cacheKey = "resolve_list";
@@ -522,7 +531,7 @@ class ottService extends common
             $version = $this->post('version', 0);
             $genre = $this->post('genre', null, ['string']);
         } catch (\Exception $e) {
-            return ['status' => true, 'error' => ErrorCode::$RES_ERROR_PARAMETER];
+            return ['status' => true, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
         }
 
         $redisKey = "ALL_" . strtoupper($genre) . "_PARADE_LIST";
@@ -642,9 +651,13 @@ class ottService extends common
      */
     public function getParadeListTvBox()
     {
-        $name = $this->post('name',null, ['required']);
-        $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
-        $timezone = $this->post('timezone', '+8');
+        try {
+            $name = $this->post('name',null, ['required']);
+            $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
+            $timezone = $this->post('timezone', '+8');
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER ];
+        }
 
         $response = $this->_getParadeTvBox($name, $day, $timezone);
         return $response;
@@ -685,9 +698,13 @@ class ottService extends common
      */
     public function getParadeList()
     {
-        $timezone = $this->post('timezone', '+8');
-        $name = $this->post('name',null, ['required']);
-        $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
+        try {
+            $timezone = $this->post('timezone', '+8');
+            $name = $this->post('name',null, ['required']);
+            $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER ];
+        }
 
         $responseData = $this->_getParadeByName($name, $day, $timezone);
 
@@ -1003,7 +1020,7 @@ class ottService extends common
     {
         try {
             $name = $this->post('name');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1071,10 +1088,14 @@ class ottService extends common
         return ['status' => true, 'data' => $mainClass];
     }
 
-
+    // 获取使用状态
     public function getGenreUsageInfo()
     {
-        $genre = $this->post('genre');
+        try {
+            $genre = $this->post('genre');
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => $e->getCode()];
+        }
 
         $mainClass = Capsule::table('ott_main_class')
                             ->where([
@@ -1099,8 +1120,13 @@ class ottService extends common
                               ])
                               ->first();
 
-        $mainClass['state'] = 'probation';
-        $mainClass['expire_time'] = strtotime('2018/9/15');
+        if (is_null($usage)) {
+            $mainClass['state'] = 'access deny';
+            $mainClass['expire_time'] = '';
+        } else {
+            $mainClass['expire_time'] = $usage->expire_time;
+            $mainClass['state'] = $usage->deny_msg;
+        }
 
         return ['status' => true, 'data' => $mainClass];
     }
@@ -1110,7 +1136,7 @@ class ottService extends common
         try {
             $genre = $this->post('genre');
             $lang = $this->post('lang', 'en_US');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1171,7 +1197,7 @@ class ottService extends common
             $sign = $this->post('sign');
             $timestamp = $this->post('timestamp');
             $serverSign = md5(md5($timestamp . 'topthinker' . $cardSecret));
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1273,7 +1299,7 @@ class ottService extends common
     {
         try {
             $app_name = $this->post('app_name');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
         $exists = Capsule::table('app_locker_switcher')
@@ -1295,7 +1321,7 @@ class ottService extends common
         try {
             $app_name = $this->post('app_name');
             $password = $this->post('password');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 

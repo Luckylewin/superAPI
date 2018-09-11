@@ -31,7 +31,7 @@ class common
      * @param null $field
      * @param null $default
      * @param null $rule
-     * @return null|object
+     * @return null|object|string|integer
      * @throws \Exception
      */
     public function post($field = null, $default = null, $rule = null)
