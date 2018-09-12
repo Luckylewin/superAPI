@@ -9,6 +9,7 @@
 namespace App\Components\pay;
 
 
+use App\Components\helper\FileHelper;
 use Breeze\Config;
 
 class DokyPay
@@ -67,7 +68,9 @@ class DokyPay
         $goods['sign'] = $this->setSign($goods);
         ksort($goods);
 
-        file_put_contents('/tmp/pay.log', json_encode($goods) . PHP_EOL, FILE_APPEND);
+        $logFile = APP_ROOT . 'storage/logs/dokypay.log';
+        FileHelper::createFile($logFile);
+        file_put_contents($logFile, json_encode($goods) . PHP_EOL, FILE_APPEND);
 
         $data = $this->post($this->url, $goods);
 
