@@ -31,8 +31,11 @@ class BaseController extends Controller
             $request->setRequest($post);
         }
 
+
+
         $this->request = $request;
-        Formatter::setHeader($this->request->server()->REQUEST_URI);
+        $header = $this->request->post()->header ?? 'header';
+        Formatter::setHeader($header);
 
         // 记录日志
         Log::write($this->request);
