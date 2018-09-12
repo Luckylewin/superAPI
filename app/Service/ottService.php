@@ -441,10 +441,9 @@ class ottService extends common
 
         } else if(CHARGE_MODE == 2) {
 
-
             // 判断是否为收费类别
             $genre = Capsule::table('ott_main_class')
-                                ->select('is_charge')
+                                ->select('is_charge','free_trail_days')
                                 ->where('name', '=', $class)
                                 ->first();
 
@@ -460,30 +459,38 @@ class ottService extends common
                                         ])
                                         ->first();
 
-                if (!is_null($genreAccess)) {
-                    return ['status' => true, 'msg' => 'ok'];
+                if (is_null($genreAccess)) {
+                    // 查询免费使用天数
+                    $day = $genre->free_trail_days;
+                    $expireTime = strtotime("+ {$day}day");
+
+                    Capsule::beginTransaction();
+                    try {
+
+                        Capsule::table('ott_genre_probation')
+                            ->insert([
+                                'mac'  => $uid,
+                                'genre' => $class,
+                                'day' => date('Y-m-d'),
+                                'expire_time' => $expireTime,
+                                'created_at' => time(),
+                                'updated_at' => time()
+                            ]);
+
+                        Capsule::table('ott_access')
+                            ->insert([
+                                'mac' => $this->uid,
+                                'genre' => $genre,
+                                'is_valid' => 1,
+                                'expire_time' =>  $expireTime,
+                                'deny_msg' => 'normal usage'
+                            ]);
+
+                    } catch (\Exception $e) {
+                        return   ['status' => false, 'msg' => '服务器错误'];
+                    }
                 }
 
-                $genreBuyRecord = Capsule::table('ott_order')
-                                ->select(['is_valid','expire_time'])
-                                ->where([
-                                    ['uid', '=',  $uid],
-                                    ['is_valid', '=', 1]])
-                                ->first();
-
-                if (empty($genreBuyRecord)) {
-                    return ['status' => false, 'msg' => '没有购买记录'];
-                }
-
-                if ($genreBuyRecord->expire_time < time()) {
-                    Capsule::table('ott_order')
-                            ->where([
-                                ['uid', '=', $uid],
-                                ['is_valid', '=', 1]])
-                            ->update(['is_valid' => 1]);
-
-                    return ['status' => false, 'msg' => '已经过期'];
-                }
             }
         }
 
