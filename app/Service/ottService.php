@@ -443,7 +443,7 @@ class ottService extends common
 
             // 判断是否为收费类别
             $genre = Capsule::table('ott_main_class')
-                                ->select('is_charge','free_trail_days')
+                                ->select('is_charge','free_trail_days','list_name')
                                 ->where('name', '=', $class)
                                 ->first();
 
