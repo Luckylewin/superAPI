@@ -242,7 +242,7 @@ class appService extends common
         $data = ArrayHelper::toArray($data);
 
         array_walk($data, function(&$v, $k){
-            $v['boot_pic_url'] = common::getAccessUrl($this->uid, $v['boot_pic'], 600);
+            $v['boot_pic_url'] = Func::getAccessUrl($this->uid, $v['boot_pic'], 600);
 
             if ($v['during'] && strpos('-', $v['during'])) {
                 $during = explode(' - ', $v['during']);

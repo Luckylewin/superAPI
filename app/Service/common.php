@@ -109,7 +109,7 @@ class common
             return $path;
         }
 
-        $config =  Config::get('NGINX');
+        $config =  Config::get('params.NGINX');
         $url = "http://" . $config['MEDIA_IP'] . ":" . $config['MEDIA_PORT'] . $path . "?";
         $secret = $config['DEFAULT_SECRET'] ; //加密密钥
         $expire = time() + $expireTime;//链接有效时间

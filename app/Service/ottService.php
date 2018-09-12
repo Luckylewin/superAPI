@@ -374,10 +374,10 @@ class ottService extends common
             array_walk($mainClass, function(&$v){
                 $v['code'] = $v['name'];
                 if (strpos($v['icon'], '/') !== false) {
-                    $v['commonpic'] = self::getAccessUrl($this->uid, $v['icon'],864000);
+                    $v['commonpic'] = Func::getAccessUrl($this->uid, $v['icon'],864000);
                 }
                 if (strpos($v['icon_hover'], '/') !== false) {
-                    $v['hoverpic'] = self::getAccessUrl($this->uid, $v['icon_hover'] ,864000);
+                    $v['hoverpic'] = Func::getAccessUrl($this->uid, $v['icon_hover'] ,864000);
                 }
                 unset($v['icon'], $v['icon_hover']);
                 $v['is_buy'] = true;
