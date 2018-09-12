@@ -459,6 +459,7 @@ class ottService extends common
                                         ])
                                         ->first();
 
+
                 if (is_null($genreAccess)) {
                     // 查询免费使用天数
                     $day = $genre->free_trail_days;
@@ -486,15 +487,24 @@ class ottService extends common
                                 'deny_msg' => 'normal usage'
                             ]);
 
+                        return ['status' => true, 'msg' => 'ok'];
+                        
                     } catch (\Exception $e) {
                         return   ['status' => false, 'msg' => '服务器错误'];
+                    }
+                } else {
+                    // 不为空
+                    if ($genreAccess['is_valid'] == true) {
+                        return ['status' => true, 'msg' => $genreAccess['deny_msg']];
+                    } else {
+                        return ['status' => false, 'msg' => $genreAccess['deny_msg']];
                     }
                 }
 
             }
         }
 
-        return ['status' => true, 'msg' => 'ok'];
+
     }
 
     /**
