@@ -35,7 +35,6 @@ class OttController extends BaseController
      */
     public function getClientToken()
     {
-
         $authService = new authService($this->request);
         $token = $authService->getClientToken();
         if ($token['status'] === false) {

@@ -28,8 +28,7 @@ class appService extends common
             $scheme = $this->post('scheme', 'all');
             $page = $this->post('page', 1);
             $limit = $this->post('per_page', 10, ['integer' ,'min'=>5,'max'=>100]);
-
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -95,7 +94,7 @@ class appService extends common
         $market['page'] = $page;
         $market['apps'] = $data;
 
-        return ['status' => true, 'code' => $market];
+        return ['status' => true, 'data' => $market];
     }
 
     /**
@@ -104,9 +103,13 @@ class appService extends common
      */
     public function getConcreteApp()
     {
-        $sign = $this->post('sign');
-        $time = $this->post('time');
-        $appId = $this->post('appid');
+        try {
+            $sign = $this->post('sign');
+            $time = $this->post('time');
+            $appId = $this->post('appid');
+        } catch (\Exception $e) {
+            return ['status' => true, 'code' => $e->getCode()];
+        }
 
         $ServerSign = md5(md5('topthinker'. $time . $this->uid));
 
