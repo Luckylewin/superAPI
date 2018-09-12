@@ -438,7 +438,7 @@ class ottService extends common
             if ($user->is_vip == false) {
                 return ['status' => false, 'msg' => '不是会员'];
             }
-
+        
         } else if(CHARGE_MODE == 2) {
 
             // 判断是否为收费类别
@@ -451,7 +451,7 @@ class ottService extends common
 
                 // 判断权限表
                 $genreAccess = Capsule::table('ott_access')
-                                        ->select(['is_valid','expire_time'])
+                                        ->select(['is_valid','expire_time', 'deny_msg'])
                                         ->where([
                                             ['mac', '=',  $uid],
                                             ['genre', '=', $class],
