@@ -92,36 +92,7 @@ class common
 
         return $cache;
     }
-
-    /**
-     * nginx防盗链
-     * @param $mac
-     * @param $path
-     * @param int $expireTime
-     * @return string
-     * @throws \Exception
-     */
-    public static function getAccessUrl($mac, $path, $expireTime = 300)
-    {
-        if (empty($path)) {
-            return 'null';
-        } elseif (strpos($path, 'http') !== false) {
-            return $path;
-        }
-
-        $config =  Config::get('params.NGINX');
-        $url = "http://" . $config['MEDIA_IP'] . ":" . $config['MEDIA_PORT'] . $path . "?";
-        $secret = $config['DEFAULT_SECRET'] ; //加密密钥
-        $expire = time() + $expireTime;//链接有效时间
-        $md5 = md5($secret.$expire, true); //生成密钥与过期时间的十六位二进制MD5数，
-        $md5 = base64_encode($md5);// 对md5进行base64_encode处理
-        $md5 = str_replace(array('=','/','+'), array('','_','-'), $md5); //分别替换字符，去掉'='字符, '/'替换成'_','+'替换成'-'
-        $key = md5($secret.$mac.$path); //对密钥, mac地址,芯片序列号sn,资源路径path进行MD5处理
-        $url .= "st={$md5}&e={$expire}&key={$key}&mac={$mac}";//最后拼接
-
-        return $url;
-    }
-
+    
     /**
      * 计算本地时间
      * @param $toTimeZone
