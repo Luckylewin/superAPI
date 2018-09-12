@@ -393,9 +393,10 @@ class authService extends common
         AES::setKEY(substr(md5($MAC . AES::$_KEY),16,32));
         $encrypt = AES::encrypt(mt_rand(111,999)."|".$this->clientIP.'|'.$MAC.'|'.$expire_time);
         $token = base64_encode($encrypt);
-        $token = str_replace('=','*',$token);
+        $token = str_replace('=','*', $token);
         $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
-        $cache->hSet($MAC,'token',$token);
+        $cache->hSet($MAC,'token', $token);
+        $cache->hSet($MAC,'logintime', date('Y-m-d H:i:s'));
         $cache->expire($MAC,$valid_time);
 
         return ['token' => $token,'expire' => $expire_time];
