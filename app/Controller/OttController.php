@@ -54,7 +54,7 @@ class OttController extends BaseController
             return Formatter::response($app['code']);
         }
 
-        return Formatter::response($app['data']);
+        return Formatter::success($app['data']);
     }
 
 
@@ -67,7 +67,7 @@ class OttController extends BaseController
             return Formatter::response($firmware['code']);
         }
 
-        return Formatter::response($firmware['data']);
+        return Formatter::success($firmware['data']);
     }
 
     // 升级安卓固件
@@ -79,7 +79,7 @@ class OttController extends BaseController
             return Formatter::response($firmware['code']);
         }
 
-        return Formatter::response($firmware['data']);
+        return Formatter::success($firmware['data']);
     }
 
     // APP市场
