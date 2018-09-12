@@ -492,10 +492,10 @@ class ottService extends common
                     }
                 } else {
                     // 不为空
-                    if ($genreAccess['is_valid'] == 1) {
-                        return ['status' => true, 'msg' => $genreAccess['deny_msg']];
+                    if ($genreAccess->is_valid == 1) {
+                        return ['status' => true, 'msg' => $genreAccess->deny_msg];
                     } else {
-                        return ['status' => false, 'msg' => $genreAccess['deny_msg']];
+                        return ['status' => false, 'msg' => $genreAccess->deny_msg];
                     }
                 }
 
