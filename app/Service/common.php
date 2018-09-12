@@ -92,7 +92,7 @@ class common
 
         return $cache;
     }
-    
+
     /**
      * 计算本地时间
      * @param $toTimeZone

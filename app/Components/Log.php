@@ -10,11 +10,18 @@ class Log
 
     public static function write(Request $request)
     {
+
         // 如果没有用标准的application/json流 进行请求
-        if (isset($request->server()->HTTP_CONTENT_TYPE) && $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
+        if ($request->method() == 'POST' && isset($request->server()->HTTP_CONTENT_TYPE) && $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
             $log = $request->rawData()->scalar;
         } else {
-            $log = (array) $request->request();
+
+            if (count(get_object_vars($request->request())) > 0) {
+                $log = (array) $request->request();
+            } else {
+                $log = (array) $request->get();
+            }
+
             $log = json_encode($log);
         }
 
