@@ -1139,8 +1139,8 @@ class ottService extends common
         // 查询
         $usage = Capsule::table('ott_access')
                               ->where([
-                                  'mac', '=', $this->uid,
-                                  'genre', '=', $genre
+                                  [ 'mac', '=', $this->uid],
+                                  ['genre', '=', $genre]
                               ])
                               ->first();
 
