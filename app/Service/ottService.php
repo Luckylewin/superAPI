@@ -480,7 +480,7 @@ class ottService extends common
                         Capsule::table('ott_access')
                             ->insert([
                                 'mac' => $this->uid,
-                                'genre' => $genre,
+                                'genre' => $genre->list_name,
                                 'is_valid' => 1,
                                 'expire_time' =>  $expireTime,
                                 'deny_msg' => 'normal usage'
