@@ -354,6 +354,7 @@ class ottService extends common
 
         // 读取缓存
         if ($cacheValue) {
+
             if (isset($data['ver']) && $this->data['ver'] == $cacheValue['version']) {
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }

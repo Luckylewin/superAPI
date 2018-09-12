@@ -197,10 +197,10 @@ class authService extends common
     private function _checkParams($uid,$data)
     {
         $MAC = $this->formatMac($uid);
-        $time = $data['time'];
+        $time = $data['time'] ?? '';
 
         $currentTime = time();
-        $encryptStr = $data['sign'];
+        $encryptStr = $data['sign'] ?? '';
 
         if (empty($time) || empty($encryptStr)) {
             throw new \Exception("参数不全",ErrorCode::$RES_ERROR_INVALID_SIGN);
