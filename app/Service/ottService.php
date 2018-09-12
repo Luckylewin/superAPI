@@ -454,7 +454,7 @@ class ottService extends common
                 $genreAccess = Capsule::table('ott_access')
                                         ->select(['is_valid','expire_time'])
                                         ->where([
-                                            ['uid', '=',  $uid],
+                                            ['mac', '=',  $uid],
                                             ['is_valid', '=', 1],
                                             ['genre', '=', $class],
                                         ])
