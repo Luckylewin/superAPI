@@ -440,14 +440,30 @@ class ottService extends common
             }
 
         } else if(CHARGE_MODE == 2) {
-            // 判断是否为收费类别
 
+
+            // 判断是否为收费类别
             $genre = Capsule::table('ott_main_class')
                                 ->select('is_charge')
                                 ->where('name', '=', $class)
                                 ->first();
 
             if (isset($genre->is_charge) && $genre->is_charge) {
+
+                // 判断权限表
+                $genreAccess = Capsule::table('ott_access')
+                                        ->select(['is_valid','expire_time'])
+                                        ->where([
+                                            ['uid', '=',  $uid],
+                                            ['is_valid', '=', 1],
+                                            ['genre', '=', $class],
+                                        ])
+                                        ->first();
+
+                if (!is_null($genreAccess)) {
+                    return ['status' => true, 'msg' => 'ok'];
+                }
+
                 $genreBuyRecord = Capsule::table('ott_order')
                                 ->select(['is_valid','expire_time'])
                                 ->where([
