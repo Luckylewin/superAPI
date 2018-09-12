@@ -31,8 +31,6 @@ class BaseController extends Controller
             $request->setRequest($post);
         }
 
-
-
         $this->request = $request;
         $header = $this->request->post()->header ?? 'header';
         Formatter::setHeader($header);

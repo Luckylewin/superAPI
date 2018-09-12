@@ -148,7 +148,7 @@ class appService extends common
         try {
             $ver = $this->post('ver', 0);
             $type = $this->post('type');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
