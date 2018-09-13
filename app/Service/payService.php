@@ -259,7 +259,7 @@ HTML;
     {
         // 更新订单支付方式
         Capsule::table('iptv_order')
-                        ->where('order_num', '=', $order_num)
+                        ->where('order_sign', '=', $order_num)
                         ->update(['order_paytype' => $payType]);
 
         Capsule::table('ott_order')
@@ -285,19 +285,19 @@ HTML;
     public function chargeWithGenre($order_sign)
     {
         $ott_order = Capsule::table('ott_order')
-            ->where('order_num' , '=',$order_sign )
-            ->first();
+                            ->where('order_num' , '=',$order_sign )
+                            ->first();
 
         if (is_null($ott_order)) {
             return false;
         }
 
         $access = Capsule::table('ott_access')
-            ->where([
-                ['genre', '=', $ott_order->genre],
-                ['mac', '=', $ott_order->uid]
-            ])
-            ->first();
+                            ->where([
+                                ['mac', '=', $ott_order->uid],
+                                ['genre', '=', $ott_order->genre],
+                            ])
+                            ->first();
 
         if (!empty($access)) {
             $baseTime =  $access->expire_time > time() ? $access->expire_time : time();
