@@ -142,3 +142,6 @@ Route::get('/return/dokypay','App\Controller\PayController@notifyByGet' );
 // 异步
 Route::post('/notify/dokypay','App\Controller\PayController@notifyByPost' );
 
+// hello world
+Route::get('/index','App\Controller\IndexController@index' );
+
