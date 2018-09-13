@@ -16,10 +16,14 @@ class Url
     public static function to($route, $params = [])
     {
         $config = Config::get('app.server');
-        $host = isset($config['hostname']) ? $config['hostname'] : $config['ip'];
-        $port = isset($config['port']) ? $config['port'] : '80';
 
-        $basic = "http://{$host}:{$port}/{$route}";
+        if ((isset($config['hostname']) || isset($config['ip'])) && isset($config['port'])) {
+            $host = isset($config['hostname']) ? $config['hostname'] : $config['ip'];
+            $port = isset($config['port']) ? $config['port'] : '80';
+            $basic = "http://{$host}:{$port}/{$route}";
+        } else {
+            $basic = 'http://' . $_SERVER['HTTP_HOST'] . '/' . $route;
+        }
 
         if (!empty($params)) {
             $queryString = '';

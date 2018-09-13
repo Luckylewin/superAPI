@@ -12,6 +12,7 @@ use App\Components\pay\DokyPay;
 use App\Components\helper\ArrayHelper;
 use App\Components\pay\Paypal;
 use App\Exceptions\ErrorCode;
+use Breeze\Helpers\Url;
 use Endroid\QrCode\QrCode;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -87,8 +88,8 @@ class payService extends common
     {
         try {
             $dokyPay = new DokyPay();
-            $dokyPay->setNotifyUrl('http://' .$_SERVER['HTTP_HOST'] . '/notify/dokypay');
-            $dokyPay->setReturnUrl('http://' . $_SERVER['HTTP_HOST'] . '/return/dokypay');
+            $dokyPay->setNotifyUrl(Url::to('notify/dokypay'));
+            $dokyPay->setReturnUrl(Url::to('return/dokypay'));
             $dokyPay->setMerTransNo($order_sign);
             $dokyPay->setAmount($amount);
             $dokyPay->setDescription($description);
@@ -99,6 +100,12 @@ class payService extends common
         }
     }
 
+    /**
+     * 处理paypal回调
+     * @param $request
+     * @param bool $async
+     * @return array|string
+     */
     public function paypalNotify($request, $async = true)
     {
         $result = Paypal::notifyCheck($request);
