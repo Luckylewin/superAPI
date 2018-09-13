@@ -106,7 +106,7 @@ class payService extends common
             return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
         }
 
-        return $this->sendResult($request['code'], $async);
+        return $this->sendResult($result['code'], $async);
     }
 
     /**

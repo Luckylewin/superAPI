@@ -53,9 +53,6 @@ class PayController extends Controller
     public function paypalCallback(Request $request)
     {
         Response::format(Response::TEXT);
-        $data = $request->get();
-        $data = ArrayHelper::toArray($data);
-
-        return (new payService($request))->paypalNotify($data, false);
+        return (new payService($request))->paypalNotify($request, false);
     }
 }
