@@ -36,7 +36,7 @@ class BaseController extends Controller
         Formatter::setHeader($header);
 
         // 记录日志
-        Log::write($this->request);
+        Log::info($this->request);
     }
 
 

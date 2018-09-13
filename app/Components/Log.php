@@ -8,7 +8,7 @@ class Log
 {
     public static $total;
 
-    public static function write(Request $request)
+    public static function info(Request $request)
     {
 
         // 如果没有用标准的application/json流 进行请求

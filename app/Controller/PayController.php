@@ -12,11 +12,10 @@ namespace App\Controller;
 use App\Components\helper\ArrayHelper;
 use App\Components\http\Formatter;
 use App\Service\payService;
-use Breeze\Http\Controller;
 use Breeze\Http\Request;
 use Breeze\Http\Response;
 
-class PayController extends Controller
+class PayController extends BaseController
 {
     /**
      * dokypay 异步通知入口

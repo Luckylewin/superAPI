@@ -261,7 +261,7 @@ HTML;
         Capsule::table('ott_order')
                     ->where('order_num', '=', $order_num)
                     ->update(['is_valid' => '1']);
-        
+
         if ($order['order_type'] == 'ott') {
             if (CHARGE_MODE == 1) {
                 $this->chargeWithMember($order['order_sign']);
