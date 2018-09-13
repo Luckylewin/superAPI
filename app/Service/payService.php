@@ -111,6 +111,18 @@ class payService extends common
     {
         $result = Paypal::notifyCheck($request);
         if ($result['status'] == true) {
+            $order_num = $result['order_num'];
+            $order = Capsule::table('iptv_order')
+                            ->where('order_sign' , '=', $order_num)
+                            ->first();
+
+            if (is_null($order)) {
+                return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST, $async);
+            }
+
+            $order = ArrayHelper::toArray($order);
+            $this->callBack($order, $order_num);
+
             return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
         }
 
@@ -249,7 +261,7 @@ HTML;
         Capsule::table('ott_order')
                     ->where('order_num', '=', $order_num)
                     ->update(['is_valid' => '1']);
-
+        
         if ($order['order_type'] == 'ott') {
             if (CHARGE_MODE == 1) {
                 $this->chargeWithMember($order['order_sign']);
