@@ -8,6 +8,7 @@
 
 namespace App\Service;
 
+use App\Components\helper\FileHelper;
 use App\Components\pay\DokyPay;
 use App\Components\helper\ArrayHelper;
 use App\Components\pay\Paypal;
@@ -125,9 +126,14 @@ class payService extends common
      */
     public function dokypayNotify($data, $async = true)
     {
-        if (isset($data['transStatus'])) {
-            $status = $data['transStatus'];
+        $notifyLog = APP_ROOT . 'storage/log/dokypay-notify.log';
+        FileHelper::createFile($notifyLog);
 
+        if (isset($data['transStatus'])) {
+
+            file_put_contents($notifyLog, json_encode($data) . PHP_EOL, FILE_APPEND);
+
+            $status = $data['transStatus'];
             if ($status == 'success') {
                 $sign = $data['sign'];
 
@@ -145,7 +151,7 @@ class payService extends common
                                     ->first();
 
                     if (is_null($order)) {
-                        return $this->sendResult(5, $async);
+                        return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST, $async);
                     }
 
                     $order = ArrayHelper::toArray($order);
@@ -245,32 +251,103 @@ HTML;
                     ->update(['is_valid' => '1']);
 
         if ($order['order_type'] == 'ott') {
-            $ott_order = Capsule::table('ott_order')
-                              ->where('order_num' , '=', $order['order_sign'])
-                              ->first();
-
-            if (!is_null($ott_order)) {
-                $user = Capsule::table('yii2_user')->where('username', '=', $order['order_uid'])->first();
-
-                if ($user) {
-                    $baseTime =  $user->vip_expire_time > time() ? $user->vip_expire_time : time();
-                    $expire_time = $baseTime + $ott_order->expire_time;
-
-                    //更新用户的过期时间
-                    Capsule::table('yii2_user')
-                            ->where('username', '=', $order['order_uid'])
-                            ->update([
-                                'identity_type' => '1',
-                                'is_vip' => 1,
-                                'vip_expire_time' => $expire_time,
-                                'updated_at' => time()]
-                            );
-
-                    echo "已更新用户的信息";
-                }
+            if (CHARGE_MODE == 1) {
+                $this->chargeWithMember($order['order_sign']);
+            } else if(CHARGE_MODE == 2) {
+                $this->chargeWithGenre($order['order_sign']);
             }
+
         }
     }
+
+    /**
+     * 按分类收费模式 业务处理
+     * @param $order_sign
+     * @return bool
+     */
+    public function chargeWithGenre($order_sign)
+    {
+        $ott_order = Capsule::table('ott_order')
+            ->where('order_num' , '=',$order_sign )
+            ->first();
+
+        if (is_null($ott_order)) {
+            return false;
+        }
+
+        $access = Capsule::table('ott_access')
+            ->where([
+                ['genre', '=', $ott_order->genre],
+                ['mac', '=', $ott_order->uid]
+            ])
+            ->first();
+
+        if (!empty($access)) {
+            $baseTime =  $access->expire_time > time() ? $access->expire_time : time();
+            $expire_time = $baseTime + $ott_order->expire_time;
+
+            //更新用户的过期时间
+            Capsule::table('ott_access')
+                ->where([
+                    ['genre', '=', $ott_order->genre],
+                    ['mac', '=', $ott_order->uid]
+                ])
+                ->update([
+                    'is_valid' => 1,
+                    'expire_time' => $expire_time,
+                    'deny_msg' => 'normal usage'
+                ]);
+        } else {
+            Capsule::table('ott_access')
+                ->insert([
+                    'is_valid' => 1,
+                    'expire_time' => time() + $ott_order->expire_time,
+                    'deny_msg' => 'normal usage'
+                ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * 按会员收费模式 业务处理
+     * @param $order_sign
+     * @return bool
+     */
+    public function chargeWithMember($order_sign)
+    {
+        $ott_order = Capsule::table('ott_order')
+            ->where('order_num' , '=',$order_sign )
+            ->first();
+
+        if (is_null($ott_order)) {
+            return false;
+        }
+
+        $user = Capsule::table('yii2_user')
+            ->where('username', '=', $ott_order->uid)
+            ->first();
+
+        if ($user) {
+            $baseTime =  $user->vip_expire_time > time() ? $user->vip_expire_time : time();
+            $expire_time = $baseTime + $ott_order->expire_time;
+
+            //更新用户的过期时间
+            Capsule::table('yii2_user')
+                ->where('username', '=', $ott_order->uid)
+                ->update([
+                        'identity_type' => '1',
+                        'is_vip' => 1,
+                        'vip_expire_time' => $expire_time,
+                        'updated_at' => time()]
+                );
+
+            echo "已更新用户的信息";
+        }
+
+        return true;
+    }
+
 
 
 }
