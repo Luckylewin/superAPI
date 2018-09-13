@@ -491,8 +491,24 @@ class ottService extends common
                         return   ['status' => false, 'msg' => '服务器错误'];
                     }
                 } else {
+
                     // 不为空
                     if ($genreAccess->is_valid == 1) {
+                        // 判断是否过期 如果过期 更新状态
+                        if ($genreAccess->expire_time < time()) {
+                            Capsule::table('ott_access')
+                                ->where([
+                                    ['mac', '=',  $uid],
+                                    ['genre', '=', $class],
+                                ])
+                                ->update([
+                                    'is_valid' => 0,
+                                    'deny_msg' => 'expire'
+                            ]);
+
+                            return ['status' => false, 'msg' => $genreAccess->expire];
+                        }
+
                         return ['status' => true, 'msg' => $genreAccess->deny_msg];
                     } else {
                         return ['status' => false, 'msg' => $genreAccess->deny_msg];
