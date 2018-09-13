@@ -168,7 +168,7 @@ class appService extends common
         }
 
         if ($this->judgeIsNeedUpdate($ver,$max_ver) == false) {
-            $this->stdout("无需更新", 'ERROR');
+            $this->stdout("无需更新", 'INFO');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
         }
 

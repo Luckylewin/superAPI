@@ -421,7 +421,6 @@ class ottService extends common
         $access = $this->judgeAccess($this->uid, $genre);
 
         if ($access['status'] === false) {
-            $this->stdout($access['msg'], 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PERMISSION_DENY];
         }
         
@@ -533,7 +532,7 @@ class ottService extends common
 
                     } catch (\Exception $e) {
                         Capsule::rollback();
-                        $this->stdout("数据库执行错误1" . $e->getMessage(), 'ERROR');
+                        $this->stdout("数据库事务回滚" . $e->getMessage(), 'ERROR');
                         return ['status' => false, 'msg' => '服务器错误'];
                     }
 
@@ -590,7 +589,7 @@ class ottService extends common
 
         if ($cacheValue) {
             if ($cacheValue['version'] == $version) {
-                $this->stdout("无需更新", 'ERROR');
+                $this->stdout("无需更新", 'INFO');
                return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }
 
@@ -638,7 +637,7 @@ class ottService extends common
 
         if ($cache) {
             if ($cache['version'] == $version) {
-                $this->stdout("无需更新", 'ERROR');
+                $this->stdout("无需更新", 'INFO');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }
 
