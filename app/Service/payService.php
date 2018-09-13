@@ -121,7 +121,7 @@ class payService extends common
             }
 
             $order = ArrayHelper::toArray($order);
-            $this->callBack($order, $order_num);
+            $this->callBack($order, $order_num, 'paypal');
 
             return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
         }
@@ -178,8 +178,7 @@ class payService extends common
                                             'order_confirmtime' => time()
                                     ]);
 
-
-                        $this->callBack($order, $order_num);
+                        $this->callBack($order, $order_num, 'dokypay');
 
                         return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
                     } else {
@@ -256,8 +255,13 @@ HTML;
     }
 
     // 业务处理
-    public function callBack($order, $order_num)
+    public function callBack($order, $order_num, $payType)
     {
+        // 更新订单支付方式
+        Capsule::table('iptv_order')
+                        ->where('order_num', '=', $order_num)
+                        ->update(['order_paytype' => $payType]);
+
         Capsule::table('ott_order')
                     ->where('order_num', '=', $order_num)
                     ->update(['is_valid' => '1']);
