@@ -533,12 +533,10 @@ class ottService extends common
 
                     } catch (\Exception $e) {
                         Capsule::rollback();
-                        $this->stdout("数据库执行错误" . $e->getMessage(), 'ERROR');
-                        return ['status' => false, 'msg' => '服务器错误'];
-                    } finally {
-                        $this->stdout("数据库执行错误", 'ERROR');
+                        $this->stdout("数据库执行错误1" . $e->getMessage(), 'ERROR');
                         return ['status' => false, 'msg' => '服务器错误'];
                     }
+
                 } else {
 
                     // 不为空
