@@ -131,13 +131,16 @@ class Paypal
         do {
             if (is_a($e, "PayPal\Exception\PayPalConnectionException")){
                 $data = json_decode($e->getData(),true);
-                $err .= $data['name'] . " - " . $data['message'] . "<br>";
-                if (isset($data['details'])){
-                    $err .= "<ul>";
-                    foreach ($data['details'] as $details){
-                        $err .= "<li>". $details['field'] . ": " . $details['issue'] . "</li>";
+                print_r($data);
+                if (isset($data['name'])) {
+                    $err .= isset($data['name']) ? $data['name'] : '' . " - " . $data['message'] . "<br>";
+                    if (isset($data['details'])){
+                        $err .= "<ul>";
+                        foreach ($data['details'] as $details){
+                            $err .= "<li>". $details['field'] . ": " . $details['issue'] . "</li>";
+                        }
+                        $err .= "</ul>";
                     }
-                    $err .= "</ul>";
                 }
             }else{
                 //some other type of error

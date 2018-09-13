@@ -22,6 +22,7 @@ class PayController extends Controller
      * dokypay 异步通知入口
      * @param Request $request
      * @return array|string
+     * @throws
      */
     public function notifyByPost(Request $request)
     {
