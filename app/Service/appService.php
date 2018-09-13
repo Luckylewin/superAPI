@@ -29,6 +29,7 @@ class appService extends common
             $page = $this->post('page', 1);
             $limit = $this->post('per_page', 10, ['integer' ,'min'=>5,'max'=>100]);
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -75,6 +76,7 @@ class appService extends common
         $data = $query->get();
         $total = $data->count();
         if ($total == false) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -114,6 +116,7 @@ class appService extends common
         $ServerSign = md5(md5('topthinker'. $time . $this->uid));
 
         if (empty($sign) || empty($time) || $sign != $ServerSign) {
+            $this->stdout("签名错误", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_SIGNATURE];
         }
 
@@ -122,6 +125,7 @@ class appService extends common
                             ->first();
 
         if (is_null($app) || !isset($app->url)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -149,6 +153,7 @@ class appService extends common
             $ver = $this->post('ver', 0);
             $type = $this->post('type');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -158,10 +163,12 @@ class appService extends common
         $max_ver = $lastApp['ver'];
 
         if ($lastApp == false) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
         if ($this->judgeIsNeedUpdate($ver,$max_ver) == false) {
+            $this->stdout("无需更新", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
         }
 
@@ -236,6 +243,7 @@ class appService extends common
                          ->get();
 
         if ($data->count() == false) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 

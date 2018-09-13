@@ -9,6 +9,7 @@
 namespace App\Service;
 
 use App\Components\cache\Redis;
+use App\Components\helper\Func;
 use App\Components\Validator;
 use App\Exceptions\ErrorCode;
 use Breeze\Config;
@@ -160,6 +161,14 @@ class common
         }
 
         return false;
+    }
+
+    // 控制台输出
+    public function stdout($str, $status)
+    {
+        if (DEBUG) {
+            echo Func::color($str, $status) . PHP_EOL;
+        }
     }
 
 

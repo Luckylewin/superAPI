@@ -101,4 +101,26 @@ class Func
         return $array;
     }
 
+    public static function color($text, $status)
+    {
+        switch($status) {
+            case "SUCCESS":
+                $out = "[42m"; //Green background
+                break;
+            case "ERROR":
+                $out = "[41m"; //Red background
+                break;
+            case "WARNING":
+                $out = "[43m"; //Yellow background
+                break;
+            case "NOTE":
+                $out = "[44m"; //Blue background
+                break;
+            default:
+                $out = "[44m"; //Blue background
+        }
+
+        return chr(27) . "$out" . "$text" . chr(27) . "[0m";
+    }
+
 }

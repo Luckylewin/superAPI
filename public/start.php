@@ -26,9 +26,13 @@ $http_worker->onMessage = function(TcpConnection $connection, $data)
 };
 
 
+// 根目录
 define('APP_ROOT', dirname(dirname(__FILE__)) . '/');
+// 日志目录
 define('LOG_PATH', dirname(dirname(__FILE__)) . '/storage/logs/');
+// 调试开关
+define('DEBUG', false);
 
-define('CHARGE_MODE', 0);
+define('CHARGE_MODE', 2);
 
 Worker::runAll();

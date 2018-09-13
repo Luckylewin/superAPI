@@ -63,6 +63,7 @@ class authService extends common
             return ['status' => true, 'data' => $this->_generateToken($uid)];
 
         } catch (\Exception $e){
+            $this->stdout($e->getMessage(), 'ERROR');
            return ['status' => false, 'code' => $e->getCode()];
         }
     }
@@ -80,14 +81,17 @@ class authService extends common
                             ->first();
 
        if ($user->count() == false) {
+           $this->stdout("用户不存在", 'ERROR');
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_UID_NOT_EXIST];
        }
        
        if ($user->access_token_expire < time()) {
+           $this->stdout("token过期", 'ERROR');
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_UID_NOT_EXIST];
        }
 
        if ($user->access_token != $token) {
+           $this->stdout("非法的token", 'ERROR');
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_TOKEN];
        }
 
@@ -108,7 +112,7 @@ class authService extends common
 
         $RedisToken = $cache->hGet($MAC,'token');
         if ($Token != $RedisToken || !$RedisToken) {
-            echo "客户端token 在redis中不存在";
+            $this->stdout("redis找不到该token", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_TOKEN];
         }
 
@@ -117,7 +121,7 @@ class authService extends common
             //解密token
             $decryptArr = $this->_decryptToken($MAC,$Token);
             if (!$decryptArr) {
-                echo "解密失败";
+                $this->stdout("解密失败", 'ERROR');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_TOKEN];
             }
 
@@ -127,15 +131,13 @@ class authService extends common
 
             //检查MAC地址
             if ($MAC != $encryptMac) {
-                echo "MAC地址不匹配,非法的token";
-                //throw new \Exception('MAC地址不匹配,非法的token',ErrorCode::$RES_ERROR_INVALID_TOKEN);
+                $this->stdout("MAC地址不匹配,非法的token", 'ERROR');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_TOKEN];
             }
 
             //检查时间
             if ($currentTime > $encryptTime) {
-                echo "Token过期";
-                //throw new \Exception('Token过期',ErrorCode::$RES_ERROR_TOKEN_EXPIRE);
+                $this->stdout("Token过期", 'ERROR');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_TOKEN_EXPIRE];
             }
 

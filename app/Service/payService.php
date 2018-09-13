@@ -272,8 +272,9 @@ HTML;
             } else if(CHARGE_MODE == 2) {
                 $this->chargeWithGenre($order['order_sign']);
             }
-
         }
+
+        $this->stdout("支付异步处理成功", "SUCCESS");
     }
 
     /**
@@ -358,7 +359,7 @@ HTML;
                         'updated_at' => time()]
                 );
 
-            echo "已更新用户的信息";
+            $this->stdout("已更新用户的信息", "ERROR");
         }
 
         return true;

@@ -52,6 +52,7 @@ class iptvService extends common
                               ->count();
 
          if ($totalItems == false) {
+             $this->stdout("没有数据", "ERROR");
              return ['status' => false, 'data' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
          }
 
@@ -139,6 +140,7 @@ class iptvService extends common
         }
 
         if (empty($video)) {
+            $this->stdout("没有数据", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 

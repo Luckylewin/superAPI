@@ -35,6 +35,7 @@ class userService extends common
         }
 
         if (is_null($user)) {
+            $this->stdout("用户不存在", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_UID_NOT_EXIST];
         }
 
@@ -52,6 +53,7 @@ class userService extends common
     /**
      * DVB 注册
      * @return array
+     * @throws
      */
     public function signup()
     {
@@ -67,6 +69,7 @@ class userService extends common
         $Encrypt = AES::encrypt($MAC .'|'. $SN);
 
         if ($sign !== $Encrypt) {
+            $this->stdout("错误的签名", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
         }
 
@@ -79,11 +82,16 @@ class userService extends common
             Capsule::table('mac')->insert($macData);
             return ["status" => true, 'data' => 'register success'];
         } else {
+            $this->stdout("用户已注册", "ERROR");
             return ["status" => false, 'code' => ErrorCode::$RES_ERROR_UID_RIGISTERED];
         }
 
     }
 
+    /**
+     * @return array
+     * @throws \Exception
+     */
     public function getInfo()
     {
         $from = $this->post('from', 'box');
@@ -100,6 +108,7 @@ class userService extends common
                         ->first();
 
         if (is_null($data)) {
+            $this->stdout("没有数据", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -128,6 +137,7 @@ class userService extends common
                          ->first();
 
         if (is_null($data)) {
+            $this->stdout("没有数据", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 

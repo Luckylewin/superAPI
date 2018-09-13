@@ -19,6 +19,7 @@ class chargeService extends common
     /**
      * 获取价目表
      * @return mixed
+     * @throws
      */
     public function getOttPriceList()
     {
@@ -30,6 +31,7 @@ class chargeService extends common
                         ->get();
 
        if ($data->count() == false) {
+           $this->stdout("没有数据", 'ERROR');
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
        }
 
@@ -60,20 +62,17 @@ class chargeService extends common
         try {
             // 查找分类价格
             $genre = $this->post('genre');
-            $type = $this->post('type');
+            $type = $this->post('type', 1, ['in', [1,3,6,12]]);
             $timestamp = $this->post('timestamp');
             $sign = $this->post('sign');
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
         $serverSign = md5($timestamp . 'topthinker');
-
-        if (!in_array($type, [1, 3, 6, 12])) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
-        }
-
         if ($sign != $serverSign) {
+            $this->stdout("错误的签名", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_SIGNATURE];
         }
 
@@ -86,12 +85,14 @@ class chargeService extends common
                         ->first();
 
         if (is_null($genre)) {
+            $this->stdout("错误的分类参数", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
         }
 
         $genre = ArrayHelper::toArray($genre);
 
         if ($genre['is_charge'] == false) {
+            $this->stdout("该分类无需支付", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_TO_PAY];
         }
 
@@ -134,6 +135,7 @@ class chargeService extends common
 
         } catch (\Exception $e) {
             Capsule::rollBack();
+            $this->stdout("数据库执行错误", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_OPERATE_DATABASE_ERROR];
         }
     }
@@ -181,6 +183,7 @@ class chargeService extends common
     /**
      * 续费卡
      * @return array
+     * @throws
      */
     public function renew()
     {
@@ -191,7 +194,11 @@ class chargeService extends common
                          ->where('card_secret',"=", $cardSecret)
                          ->first();
 
-        if (is_null($card) || !$card->is_valid || $card->is_del) {
+        if (is_null($card)) {
+            $this->stdout("非法的卡号", "ERROR");
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_CARD];
+        } else if (!$card->is_valid || $card->is_del) {
+            $this->stdout("卡无效,已核销", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_CARD];
         }
 
@@ -202,6 +209,7 @@ class chargeService extends common
                             ->first();
 
         if (is_null($macInfo)) {
+            $this->stdout("用户不存在", "ERROR");
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_UID_NOT_EXIST];
         }
 

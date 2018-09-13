@@ -25,6 +25,7 @@ class ottService extends common
     /**
      * 首页推荐
      * @return array
+     * @throws
      */
     public function getRecommend()
     {
@@ -64,6 +65,7 @@ class ottService extends common
         $banners = $this->getDataFromCache($cacheKey, $redisDB);
 
         if (empty($banners)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -99,6 +101,7 @@ class ottService extends common
         $data = $this->majorEventForHour($language, $timezone, $during['start'], $during['end']);
 
         if (empty($data)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -115,6 +118,7 @@ class ottService extends common
             $language = $this->post('lang', 'en');
             $timezone = $this->post('timezone', '+8');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -132,6 +136,7 @@ class ottService extends common
 
         //按天进行分组
         if (empty($responseDataList)) {
+            $this->stdout('没有数据', 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -356,6 +361,7 @@ class ottService extends common
         if ($cacheValue) {
 
             if (isset($data['ver']) && $this->data['ver'] == $cacheValue['version']) {
+                $this->stdout('没有数据', 'ERROR');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }
 
@@ -408,12 +414,14 @@ class ottService extends common
             $type = $this->post('type', '');
             $genre = $country ? $country : $type;
         }catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
         $access = $this->judgeAccess($this->uid, $genre);
 
         if ($access['status'] === false) {
+            $this->stdout($access['msg'], 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PERMISSION_DENY];
         }
         
@@ -436,6 +444,7 @@ class ottService extends common
                     ->first();
 
             if ($user->is_vip == false) {
+                $this->stdout("不是会员", 'ERROR');
                 return ['status' => false, 'msg' => '不是会员'];
             }
 
@@ -489,8 +498,10 @@ class ottService extends common
 
                     } catch (\Exception $e) {
                         Capsule::rollback();
+                        $this->stdout("数据库执行错误", 'ERROR');
                         return ['status' => false, 'msg' => '服务器错误'];
                     } finally {
+                        $this->stdout("数据库执行错误", 'ERROR');
                         return ['status' => false, 'msg' => '服务器错误'];
                     }
                 } else {
@@ -508,12 +519,13 @@ class ottService extends common
                                     'is_valid' => 0,
                                     'deny_msg' => 'expire'
                             ]);
-
+                            $this->stdout("分类过期", 'ERROR');
                             return ['status' => false, 'msg' => $genreAccess->expire];
                         }
 
                         return ['status' => true, 'msg' => $genreAccess->deny_msg];
                     } else {
+                        $this->stdout("分类过期", 'ERROR');
                         return ['status' => false, 'msg' => $genreAccess->deny_msg];
                     }
                 }
@@ -521,7 +533,7 @@ class ottService extends common
             }
         }
 
-
+        return ['status' => true, 'msg' => 'ok'];
     }
 
     /**
@@ -545,6 +557,7 @@ class ottService extends common
 
         if ($cacheValue) {
             if ($cacheValue['version'] == $version) {
+                $this->stdout("无需更新", 'ERROR');
                return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }
 
@@ -559,6 +572,7 @@ class ottService extends common
         $data = ArrayHelper::toArray($data);
 
         if (empty($data)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -591,6 +605,7 @@ class ottService extends common
 
         if ($cache) {
             if ($cache['version'] == $version) {
+                $this->stdout("无需更新", 'ERROR');
                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
             }
 
@@ -603,6 +618,7 @@ class ottService extends common
                           ->get();
 
         if (is_null($items)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -637,6 +653,7 @@ class ottService extends common
         $this->getRedis($redisDB)->expire($redisKey, 3600);
 
         if (empty($parade)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -655,6 +672,7 @@ class ottService extends common
             $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
             $timezone = $this->post('timezone', '+8');
         } catch (\InvalidArgumentException $e) {
+            $this->stdout("参数错误", 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -665,6 +683,7 @@ class ottService extends common
                           ->first();
 
         if (empty($class)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -676,6 +695,7 @@ class ottService extends common
         $channels = ArrayHelper::toArray($channels);
 
         if (empty($channels)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -690,6 +710,7 @@ class ottService extends common
         }
 
         if (empty($responseData)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -707,7 +728,8 @@ class ottService extends common
             $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
             $timezone = $this->post('timezone', '+8');
         } catch (\Exception $e) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER ];
+            $this->stdout("参数错误", 'ERROR');
+            return ['status' => false, 'code' => $e->getCode() ];
         }
 
         $response = $this->_getParadeTvBox($name, $day, $timezone);
@@ -754,12 +776,14 @@ class ottService extends common
             $name = $this->post('name',null, ['required']);
             $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
         } catch (\Exception $e) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER ];
+            $this->stdout("没有数据", 'ERROR');
+            return ['status' => false, 'code' => $e->getCode() ];
         }
 
         $responseData = $this->_getParadeByName($name, $day, $timezone);
 
         if ($responseData == false) {
+            $this->stdout("没有数据", 'ERROR');
             return ['code' => ErrorCode::$RES_ERROR_NO_LIST_DATA, 'status' => false];
         }
 
@@ -1002,6 +1026,7 @@ class ottService extends common
         }
 
         if ($cacheVersion && $version >= $cacheVersion) {
+            $this->stdout("无需更新", 'INFO');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
         }
 
@@ -1020,6 +1045,7 @@ class ottService extends common
             $this->encryptJson(self::getKey($class, 'ALL', $format));
 
         if (empty($data)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -1072,6 +1098,7 @@ class ottService extends common
         try {
             $name = $this->post('name');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1098,6 +1125,7 @@ class ottService extends common
         try {
             $name = $this->post('name');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1108,6 +1136,7 @@ class ottService extends common
                     ->first();
 
         if (is_null($mainClass)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -1145,6 +1174,7 @@ class ottService extends common
         try {
             $genre = $this->post('genre');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1158,6 +1188,7 @@ class ottService extends common
                             ->first();
 
         if (is_null($mainClass)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -1188,6 +1219,7 @@ class ottService extends common
             $genre = $this->post('genre');
             $lang = $this->post('lang', 'en_US');
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -1207,6 +1239,7 @@ class ottService extends common
                             ->first();
 
         if (empty($mainClass)) {
+            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -1249,15 +1282,18 @@ class ottService extends common
             $timestamp = $this->post('timestamp');
             $serverSign = md5(md5($timestamp . 'topthinker' . $cardSecret));
         } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
 
         if ($serverSign != $sign) {
+            $this->stdout("签名错误", 'ERROR');
             return ['status' => false, 'code' =>ErrorCode::$RES_ERROR_INVALID_SIGN];
         }
 
         $exist = Capsule::table('mac')->where('MAC', '=', $this->uid)->exists();
         if ($exist == false) {
+            $this->stdout("用户不存在", 'ERROR');
             return ['status' => false, 'code' =>ErrorCode::$RES_ERROR_UID_NOT_EXIST];
         }
 
@@ -1267,6 +1303,7 @@ class ottService extends common
                         ->first();
 
         if (is_null($card) || !$card->is_valid || $card->is_del) {
+            $this->stdout("卡无效", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_CARD];
         }
 
@@ -1341,6 +1378,7 @@ class ottService extends common
             Capsule::rollback();
         }
 
+        $this->stdout("服务器内部错误", 'ERROR');
         return ['status' => false, 'code' => ErrorCode::$RES_ERROR_SERVICE_IS_TEMPORARILY_UNAVAILABLE];
 
     }
@@ -1351,6 +1389,7 @@ class ottService extends common
         try {
             $app_name = $this->post('app_name');
         } catch (\Exception $e) {
+            $this->stdout($e->getCode(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
         $exists = Capsule::table('app_locker_switcher')
@@ -1377,6 +1416,7 @@ class ottService extends common
         }
 
         if ($password != '80123') {
+            $this->stdout("不正确的暗号", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
         }
 
