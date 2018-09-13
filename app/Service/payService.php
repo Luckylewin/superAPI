@@ -22,7 +22,7 @@ class payService extends common
     {
         try {
             $order_sign = $this->post('order_sign');
-            $payType = $this->post('paytype', 'dokypay', ['in', ['dokypay', 'paypal']]);
+            $payType = $this->post('pay_type', 'dokypay', ['in', ['dokypay', 'paypal']]);
 
         } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
