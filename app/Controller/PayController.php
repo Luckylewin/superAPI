@@ -11,7 +11,6 @@ namespace App\Controller;
 
 use App\Components\helper\ArrayHelper;
 use App\Components\http\Formatter;
-use App\Components\pay\Paypal;
 use App\Service\payService;
 use Breeze\Http\Controller;
 use Breeze\Http\Request;
@@ -36,6 +35,7 @@ class PayController extends Controller
      * dokypay 同步通知入口
      * @param Request $request
      * @return array|string
+     * @throws \Exception
      */
     public function notifyByGet(Request $request)
     {
@@ -53,11 +53,9 @@ class PayController extends Controller
     public function paypalCallback(Request $request)
     {
         Response::format(Response::TEXT);
-        $result = Paypal::notifyCheck($request);
-        if ($result['status'] == true) {
-            return '支付成功';
-        }
+        $data = $request->get();
+        $data = ArrayHelper::toArray($data);
 
-        return '支付失败';
+        return (new payService($request))->paypalNotify($data, false);
     }
 }

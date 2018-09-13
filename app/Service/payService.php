@@ -24,7 +24,7 @@ class payService extends common
             $order_sign = $this->post('order_sign');
             $payType = $this->post('paytype', 'dokypay', ['in', ['dokypay', 'paypal']]);
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
 
@@ -99,6 +99,23 @@ class payService extends common
         }
     }
 
+    public function paypalNotify($request, $async = true)
+    {
+        $result = Paypal::notifyCheck($request);
+        if ($result['status'] == true) {
+            return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
+        }
+
+        return $this->sendResult($request['code'], $async);
+    }
+
+    /**
+     * dokypay 支付异步处理
+     * @param $data
+     * @param bool $async
+     * @return array|string
+     * @throws \Exception
+     */
     public function dokypayNotify($data, $async = true)
     {
         if (isset($data['transStatus'])) {
@@ -139,63 +156,32 @@ class payService extends common
 
                         $this->callBack($order, $order_num);
 
-                        return $this->sendResult(0, $async);
+                        return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
                     } else {
-                        return $this->sendResult(1, $async);
+                        return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED, $async);
                     }
 
                 } else {
-                    return $this->sendResult(3, $async);
-
+                    return $this->sendResult(ErrorCode::$RES_ERROR_INVALID_SIGN, $async);
                 }
+            } else {
+                return $this->sendResult(ErrorCode::$RES_ERROR_PAYMENT_FAILED, $async);
             }
 
         } else {
-
-            return $this->sendResult(4, $async);
+            return $this->sendResult(ErrorCode::$RES_ERROR_INVALID_CALLBACK, $async);
         }
     }
 
     public function sendResult($code, $async)
     {
-        switch ($code) {
-            case '0':
-                echo "支付回调处理成功";
-                if ($async) {
-                    return ['result' => 'pay success'];
-                } else {
-                    return $this->callbackPage('success', 'Payment Successful', 'please restart APP');
-                }
+        $msg = ErrorCode::getError($code);
+        $status = $code == ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS ? 'success' : 'warn';
 
-            case '1':
-                echo "该订单已经被处理";
-                if ($async) {
-                    return ['result' => 'had deal this order ,success'];
-                } else {
-                    return $this->callbackPage('warn', 'had deal this order');
-                }
-
-            case '3':
-                echo "签名校验失败";
-                if ($async) {
-                    return ['result' => 'invalid sign'];
-                } else {
-                    return $this->callbackPage('warn', 'Invalid Sign');
-                }
-
-            case '4':
-                echo "错误的回调";
-                if ($async) {
-                    return ['result' => 'invalid callback'];
-                } else {
-                    return $this->callbackPage('warn', 'Invalid Callback');
-                }
-            default:
-                if ($async) {
-                    return ['result' => 'An error occured'];
-                } else {
-                    return $this->callbackPage('warn', 'Invalid Callback');
-                }
+        if ($async) {
+            return ['result' => $msg];
+        } else {
+            return $this->callbackPage($status, $msg);
         }
     }
 
@@ -227,7 +213,11 @@ HTML;
 
     public function getOrderInfo()
     {
-        $order_sign = $this->post('order_sign');
+        try {
+            $order_sign = $this->post('order_sign');
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => $e->getCode()];
+        }
 
         $order = Capsule::table('iptv_order')
                          ->where('order_sign', '=', $order_sign)

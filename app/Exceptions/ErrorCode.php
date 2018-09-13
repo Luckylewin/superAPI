@@ -57,6 +57,11 @@ class ErrorCode
     public static $RES_ERROR_ORDER_DOES_NOT_EXIST  = 40;
     public static $RES_ERROR_SERVICE_IS_TEMPORARILY_UNAVAILABLE  = 41;
     public static $RES_ERROR_NO_NEED_TO_PAY  = 42;
+    public static $RES_ERROR_ORDER_HAS_BEEN_PROCESSED = 43;
+    public static $RES_ERROR_INVALID_CALLBACK = 44;
+    public static $RES_ERROR_PAYMENT_FAILED = 45;
+    public static $RES_SUCCESS_PAYMENT_SUCCESS = 46;
+
 
 
     public static function getError($code)
@@ -189,7 +194,18 @@ class ErrorCode
             case self::$RES_ERROR_NO_NEED_TO_PAY:
                 $error = 'No need to pay';
                 break;
-
+            case self::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED:
+                $error = 'The current order has been paid successfully, no need to repeat payment';
+                break;
+            case self::$RES_ERROR_INVALID_CALLBACK:
+                $error = "Invalid callback";
+                break;
+            case self::$RES_ERROR_PAYMENT_FAILED:
+                $error = 'payment failed';
+                break;
+            case self::$RES_SUCCESS_PAYMENT_SUCCESS:
+                $error = 'payment successful';
+                break;
             default:
                 $error = "other error";
                 break;

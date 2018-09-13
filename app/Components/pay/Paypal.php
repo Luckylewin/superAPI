@@ -65,7 +65,7 @@ class Paypal
         $shipping = 0.00; //运费
         $invoice_number = $order_sign; //订单号
         $successCallback = Url::to('paypalCallback',['success'=>'true']);   //成功支付回调
-        $cancelCallback = Url::to('paypalCallback',['success'=>'true']);  //取消回调
+        $cancelCallback = Url::to('paypalCallback',['success'=>'false']);  //取消回调
         $total = $price; //总金额
         $quantity = 1; //数量
         $currency = 'USD'; //货币
@@ -185,7 +185,8 @@ class Paypal
 
             return ['status' => true, 'order_num' => $invoice_number];
         } catch(\Exception $e){
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
+
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED];
         }
     }
 }

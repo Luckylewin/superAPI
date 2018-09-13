@@ -438,7 +438,7 @@ class ottService extends common
             if ($user->is_vip == false) {
                 return ['status' => false, 'msg' => '不是会员'];
             }
-        
+
         } else if(CHARGE_MODE == 2) {
 
             // 判断是否为收费类别
