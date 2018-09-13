@@ -138,7 +138,7 @@ class payService extends common
      */
     public function dokypayNotify($data, $async = true)
     {
-        $notifyLog = APP_ROOT . 'storage/log/dokypay-notify.log';
+        $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
         FileHelper::createFile($notifyLog);
 
         if (isset($data['transStatus'])) {
