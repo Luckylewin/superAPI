@@ -468,6 +468,41 @@ class ottService extends common
                                         ->first();
 
                 if (is_null($genreAccess)) {
+
+                    // 查询是否已经存在试用期
+                    $probation = Capsule::table('ott_genre_probation')
+                                        ->where([
+                                            ['mac', '=',  $uid],
+                                            ['genre', '=', $class],
+                                        ])
+                                        ->first();
+
+                    if (!empty($probation)) {
+                          if ($probation->expire_time > time()) {
+                              Capsule::table('ott_access')
+                                  ->insert([
+                                      'mac' => $uid,
+                                      'genre' => $genre->list_name,
+                                      'is_valid' => 1,
+                                      'expire_time' =>  $probation->expire_time,
+                                      'deny_msg' => 'normal usage'
+                                  ]);
+                              return ['status' => true, 'msg' => 'ok'];
+                          } else {
+                              Capsule::table('ott_access')
+                                  ->insert([
+                                      'mac' => $uid,
+                                      'genre' => $genre->list_name,
+                                      'is_valid' => 0,
+                                      'expire_time' =>  $probation->expire_time,
+                                      'deny_msg' => 'expire of probation'
+                                  ]);
+
+                              $this->stdout("分类过期", 'ERROR');
+                              return ['status' => false, 'msg' => $genreAccess->expire];
+                          }
+                    }
+
                     // 查询免费使用天数
                     $day = $genre->free_trail_days;
                     $expireTime = strtotime("+ {$day}day");
@@ -487,7 +522,7 @@ class ottService extends common
 
                         Capsule::table('ott_access')
                             ->insert([
-                                'mac' => $this->uid,
+                                'mac' => $uid,
                                 'genre' => $genre->list_name,
                                 'is_valid' => 1,
                                 'expire_time' =>  $expireTime,
@@ -498,7 +533,7 @@ class ottService extends common
 
                     } catch (\Exception $e) {
                         Capsule::rollback();
-                        $this->stdout("数据库执行错误", 'ERROR');
+                        $this->stdout("数据库执行错误" . $e->getMessage(), 'ERROR');
                         return ['status' => false, 'msg' => '服务器错误'];
                     } finally {
                         $this->stdout("数据库执行错误", 'ERROR');
