@@ -484,11 +484,14 @@ class ottService extends common
                                 'expire_time' =>  $expireTime,
                                 'deny_msg' => 'normal usage'
                             ]);
-
+                        Capsule::commit();
                         return ['status' => true, 'msg' => 'ok'];
 
                     } catch (\Exception $e) {
-                        return   ['status' => false, 'msg' => '服务器错误'];
+                        Capsule::rollback();
+                        return ['status' => false, 'msg' => '服务器错误'];
+                    } finally {
+                        return ['status' => false, 'msg' => '服务器错误'];
                     }
                 } else {
 
