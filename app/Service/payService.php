@@ -109,6 +109,8 @@ class payService extends common
      */
     public function paypalNotify($request, $async = true)
     {
+        $this->stdout("paypal 同步通知",'INFO');
+
         $result = Paypal::notifyCheck($request);
         if ($result['status'] == true) {
             $order_num = $result['order_num'];
@@ -138,6 +140,9 @@ class payService extends common
      */
     public function dokypayNotify($data, $async = true)
     {
+        $type = $async ? '异步' : '同步';
+        $this->stdout("dokypay {$type}通知",'INFO');
+
         $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
         FileHelper::createFile($notifyLog);
 
