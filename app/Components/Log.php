@@ -2,11 +2,24 @@
 namespace App\Components;
 
 use App\Components\cache\Redis;
+use App\Components\helper\FileHelper;
 use Breeze\Http\Request;
 
 class Log
 {
     public static $total;
+
+    public static function write($file, $str, $append = true)
+    {
+        if (is_writable($file) == false) {
+            FileHelper::createFile($file);
+        }
+
+        if ($str) {
+            $str = date('Y-m-d H:i:s') . "|" . $str;
+            file_put_contents($file, $str, $append ? FILE_APPEND : null);
+        }
+    }
 
     public static function info(Request $request)
     {

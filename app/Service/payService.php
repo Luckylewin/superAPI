@@ -71,11 +71,23 @@ class payService extends common
      * @param $amount
      * @param $productName
      * @param $description
-     * @return string
+     * @return bool|string
+     * @throws \Exception
      */
     public function paypal($order_sign, $amount, $productName, $description)
     {
-        return Paypal::pay($order_sign, $amount, $productName, $description);
+        try {
+            $paypal = new Paypal();
+            $paypal->setMerTransNo($order_sign);
+            $paypal->setAmount($amount);
+            $paypal->setProduct($productName);
+            $paypal->setDescription($description);
+
+            return $paypal->unifiedOrder();
+        } catch (\Exception $e) {
+            $this->stdout($e->getMessage(), "ERROR");
+            return false;
+        }
     }
 
     /**
@@ -89,8 +101,6 @@ class payService extends common
     {
         try {
             $dokyPay = new DokyPay();
-            $dokyPay->setNotifyUrl(Url::to('notify/dokypay'));
-            $dokyPay->setReturnUrl(Url::to('return/dokypay'));
             $dokyPay->setMerTransNo($order_sign);
             $dokyPay->setAmount($amount);
             $dokyPay->setDescription($description);
@@ -111,7 +121,9 @@ class payService extends common
     {
         $this->stdout("paypal 同步通知",'INFO');
 
-        $result = Paypal::notifyCheck($request);
+        $paypal = new Paypal();
+        $result = $paypal->notifyCheck($request);
+
         if ($result['status'] == true) {
             $order_num = $result['order_num'];
             $order = Capsule::table('iptv_order')
@@ -214,6 +226,13 @@ class payService extends common
         }
     }
 
+    /**
+     * 返回页面提示
+     * @param $status
+     * @param $title
+     * @param string $detail
+     * @return string
+     */
     public function callbackPage($status,$title, $detail = 'please retry again')
     {
 

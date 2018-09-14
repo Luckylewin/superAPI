@@ -86,7 +86,7 @@ Route::group(['middleware' => 'json'], function() {
     Route::post('/ottCharge', 'App\Controller\OttController@ottCharge');
 
 // 支付接口
-    Route::post('/pay', 'App\Controller\OttController@pay');
+    Route::post('/pay', 'App\Controller\PayController@pay');
 
 // 查询订单接口
     Route::post('/getOrderStatus', 'App\Controller\OttController@getOrderStatus');

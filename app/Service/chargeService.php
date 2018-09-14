@@ -96,8 +96,15 @@ class chargeService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_TO_PAY];
         }
 
-        $goods = $this->_getGoodsInfo($genre, $type);
+        // 判断订单是否有未支付的
+        /*Capsule::table('ott_order')
+                    ->where([
+                        ['uid' , '=', $this->uid],
+                        ['genre', '=', $genre['list_name']]
+                    ])
+                    ->get();*/
 
+        $goods = $this->_getGoodsInfo($genre, $type);
         $order_sign = $this->_generateOrder();  //产生一个订单号
 
         // 订单流水表

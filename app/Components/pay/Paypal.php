@@ -27,18 +27,25 @@ use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Exception\PayPalConnectionException;
 use PayPal\Rest\ApiContext;
 
-class Paypal
+class Paypal extends BasePay
 {
-    public static function init()
+    public function __construct()
+    {
+       $this->init();
+    }
+
+    public function init()
     {
         $config  = Config::get('params.PAYPAL');
-        $clientId = $config['CLIENT_ID'];
-        $clientSecret = $config['SECRET'];
-        $logFile = LOG_PATH . 'paypal.log';
+        $this->setAppId($config['CLIENT_ID']);
+        $this->setAppSecret($config['SECRET']);
+        $this->setReturnUrl(Url::to('paypalCallback',['success'=>'true']));
+        $this->setCancelUrl(Url::to('paypalCallback',['success'=>'false']));
 
+        $logFile = LOG_PATH . 'paypal.log';
         FileHelper::createFile($logFile);
 
-        $apiContext = new ApiContext(new OAuthTokenCredential($clientId, $clientSecret));
+        $apiContext = new ApiContext(new OAuthTokenCredential($this->app_id, $this->app_key));
         $apiContext->setConfig([
             'mode' => 'live',
             'log.LogEnabled' => true,
@@ -51,59 +58,51 @@ class Paypal
     }
 
     /**
-     * 下单
-     * @param $order_sign string 订单号
-     * @param $amount string 数量
-     * @param $productName string 产品名称
-     * @param $order_description string 产品描述
-     * @return string
+     * @return bool|string
+     * @throws \Exception
      */
-    public static function pay($order_sign, $amount, $productName, $order_description)
+    public function unifiedOrder()
     {
-        $product = $productName;
-        $price = $amount;
-        $shipping = 0.00; //运费
-        $invoice_number = $order_sign; //订单号
-        $successCallback = Url::to('paypalCallback',['success'=>'true']);   //成功支付回调
-        $cancelCallback = Url::to('paypalCallback',['success'=>'false']);  //取消回调
-        $total = $price; //总金额
-        $quantity = 1; //数量
-        $currency = 'USD'; //货币
-        $description = $order_description;  //订单描述信息
+        $requires = ['merTransNo','amount', 'product', 'description'];
+        foreach ($requires as $field) {
+            if (empty($this->$field)) {
+                throw new \Exception("$field 参数未设置");
+            }
+        }
 
         //创建paypal对象
-        $apiContext = paypal::init();
+        $apiContext = $this->init();
 
         $payer = new Payer();
         $payer->setPaymentMethod('paypal');
 
         $item = new Item();
-        $item->setName($product)
-                ->setCurrency($currency)
-                ->setQuantity($quantity)
-                ->setPrice($price);
+        $item->setName($this->product)
+                ->setCurrency($this->currency)
+                ->setQuantity($this->quantity)
+                ->setPrice($this->amount);
 
         $itemList = new ItemList();
         $itemList->setItems([$item]);
 
         $details = new Details();
-        $details->setShipping($shipping)
-                ->setSubtotal($price);
+        $details->setShipping($this->shipping)
+                ->setSubtotal($this->amount);
 
         $amount = new Amount();
-        $amount->setCurrency($currency)
-                ->setTotal($total)
+        $amount->setCurrency($this->currency)
+                ->setTotal($this->amount)
                 ->setDetails($details);
 
         $transaction = new Transaction();
         $transaction->setAmount($amount)
                     ->setItemList($itemList)
-                    ->setDescription($description)
-                    ->setInvoiceNumber($invoice_number);
+                    ->setDescription($this->description)
+                    ->setInvoiceNumber($this->merTransNo);
 
         $redirectUrls = new RedirectUrls();
-        $redirectUrls->setReturnUrl($successCallback)   //设置支付成功回调地址
-                     ->setCancelUrl($cancelCallback); //设置支付失败回调地址
+        $redirectUrls->setReturnUrl($this->returnUrl)   //设置支付成功回调地址
+                     ->setCancelUrl($this->cancelUrl); //设置支付失败回调地址
 
         $payment = new Payment();
         $payment->setIntent('sale')
@@ -117,7 +116,7 @@ class Paypal
         } catch (PayPalConnectionException $e) {
             $error = self::PaypalError($e);
             print_r($error);
-           return false;
+            return false;
         }
     }
 
@@ -156,7 +155,7 @@ class Paypal
      * @param Request $request
      * @return array
      */
-    public static function notifyCheck(Request $request)
+    public function notifyCheck(Request $request)
     {
         if ($request->get('success') == 'false') {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN ];
@@ -172,7 +171,7 @@ class Paypal
         $paymentID = $request->get('paymentId');
         $payerId = $request->get('PayerID');
 
-        $apiContext = paypal::init();
+        $apiContext = $this->init();
         $payment = Payment::get($paymentID, $apiContext);
 
         $execute = new PaymentExecution();

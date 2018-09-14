@@ -17,6 +17,19 @@ use Breeze\Http\Response;
 
 class PayController extends BaseController
 {
+
+    // 支付接口
+    public function pay()
+    {
+        $data = (new payService($this->request))->pay();
+
+        if ($data['status'] === false) {
+            return Formatter::response($data['code']);
+        }
+
+        return Formatter::success($data['data']);
+    }
+
     /**
      * dokypay 异步通知入口
      * @param Request $request

@@ -305,18 +305,6 @@ class OttController extends BaseController
         return Formatter::success($data['data']);
     }
 
-    // 支付接口
-    public function pay()
-    {
-        $data = (new payService($this->request))->pay();
-
-        if ($data['status'] === false) {
-            return Formatter::response($data['code']);
-        }
-
-        return Formatter::success($data['data']);
-    }
-
     public function getOttPriceList()
     {
         $data = (new chargeService($this->request))->getOttPriceList();

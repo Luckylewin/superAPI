@@ -8,37 +8,32 @@
 
 namespace App\Components\pay;
 
-
-use App\Components\helper\FileHelper;
+use App\Components\Log;
 use Breeze\Config;
+use Breeze\Helpers\Url;
 
-class DokyPay
+class DokyPay extends BasePay
 {
     private $url = 'https://gateway.dokypay.com/clientapi/unifiedorder';
-    private $app_id;
-    private $app_key;
-
-
     private $version = '1.0';
     private $prodName = 'southeast.asia';
     private $country = 'CN';
-    private $currency = 'USD';
-    private $amount;
-    private $description;
-    private $merTransNo;
-    private $notifyUrl;
-    private $returnUrl;
-
 
     public function __construct()
     {
-        $config = Config::get('params.DOKYPAY');
-        $this->app_id = $config['APP_ID'];
-        $this->app_key = $config['APP_KEY'];
+        $this->init();
+    }
 
-        if (empty($this->app_id) || empty($this->app_key)) {
-            throw new \Exception('缺少dokypay的支付配置，请在配置文件params-local.php填写配置信息');
-        }
+    /**
+     * @return mixed|void
+     */
+    public function init()
+    {
+        $config = Config::get('params.DOKYPAY');
+        $this->setAppId($config['APP_ID']);
+        $this->setAppSecret($config['APP_KEY']);
+        $this->setNotifyUrl(Url::to('notify/dokypay'));
+        $this->setReturnUrl(Url::to('return/dokypay'));
     }
 
     /**
@@ -69,8 +64,7 @@ class DokyPay
         ksort($goods);
 
         $logFile = APP_ROOT . 'storage/logs/dokypay.log';
-        FileHelper::createFile($logFile);
-        file_put_contents($logFile, json_encode($goods) . PHP_EOL, FILE_APPEND);
+        Log::write($logFile, json_encode($goods) . PHP_EOL);
 
         $data = $this->post($this->url, $goods);
 
@@ -82,7 +76,7 @@ class DokyPay
 
     }
 
-    private function post($url, $data)
+    private function  post($url, $data)
     {
         $ch = curl_init();
         $timeout = 5;
@@ -110,81 +104,11 @@ class DokyPay
     }
 
     /**
-     * 设置国家
-     * @param $country
-     */
-    public function setCountry($country)
-    {
-        $this->country = $country;
-    }
-
-    /**
-     * 设置货币
-     * @param $currency
-     */
-    public function setCurrency($currency)
-    {
-        $this->currency = $currency;
-    }
-
-    /**
-     * 设置订单描述
-     * @param $description
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-    }
-
-    /**
-     * 设置商户订单号 自行检测是否有重复
-     * @param $transNo
-     */
-    public function setMerTransNo($transNo)
-    {
-        $this->merTransNo = $transNo;
-    }
-
-    /**
-     * 异步回调地址
-     * @param $url
-     */
-    public function setNotifyUrl($url)
-    {
-        $this->notifyUrl = $url;
-    }
-
-    /**
-     * 同步返回地址
-     * @param $url
-     */
-    public function setReturnUrl($url)
-    {
-        $this->returnUrl = $url;
-    }
-
-    /**
-     * @param $name string 产品名称
-     */
-    public function setProdName($name)
-    {
-        $this->prodName = $name;
-    }
-
-    /**
      * @param $version string API 版本
      */
     public function setVersion($version)
     {
         $this->version = $version;
-    }
-
-    /**
-     * @param $amount string 订单金额
-     */
-    public function setAmount($amount)
-    {
-        $this->amount = $amount;
     }
 
     /**
