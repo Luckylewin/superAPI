@@ -61,6 +61,7 @@ class ErrorCode
     public static $RES_ERROR_INVALID_CALLBACK = 44;
     public static $RES_ERROR_PAYMENT_FAILED = 45;
     public static $RES_SUCCESS_PAYMENT_SUCCESS = 46;
+    public static $RES_ERROR_OVERTIME_PAYMENT  = 47;
 
 
 
@@ -205,6 +206,9 @@ class ErrorCode
                 break;
             case self::$RES_SUCCESS_PAYMENT_SUCCESS:
                 $error = 'payment successful';
+                break;
+            case self::$RES_ERROR_OVERTIME_PAYMENT:
+                $error = 'Overtime payment';
                 break;
             default:
                 $error = "other error";

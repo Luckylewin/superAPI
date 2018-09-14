@@ -136,7 +136,7 @@ class chargeService extends common
                     'order_money' => $order['order_money'],
                     'order_uid' => $this->uid,
                     'order_info' => $order['order_info'],
-                    'expire' => time() + 2700
+                    'expire' => time() + 1800
                 ]
             ];
 

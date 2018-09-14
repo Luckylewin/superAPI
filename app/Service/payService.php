@@ -40,6 +40,12 @@ class payService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
         }
 
+
+        // 判断订单是否超时
+        if (time() - $order->order_addtime >= 1800) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_OVERTIME_PAYMENT];
+        }
+
         if (isset($order->order_status) && $order->order_status) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_REPEATED];
         }
@@ -137,7 +143,7 @@ class payService extends common
             }
 
             $order = ArrayHelper::toArray($order);
-            
+
             if ($order['order_status'] == '0') {
                 $this->updateOrder($order_num);
                 $this->callBack($order, $order_num, 'paypal');
@@ -315,7 +321,7 @@ HTML;
             }
         }
 
-        $this->stdout("支付异步处理成功", "SUCCESS");
+        $this->stdout("支付回调业务逻辑处理成功", "SUCCESS");
     }
 
     /**
