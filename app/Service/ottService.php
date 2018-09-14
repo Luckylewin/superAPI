@@ -552,7 +552,8 @@ class ottService extends common
                                     'deny_msg' => 'expire'
                             ]);
                             $this->stdout("分类过期", 'ERROR');
-                            return ['status' => false, 'msg' => $genreAccess->expire];
+
+                            return ['status' => false, 'msg' => 'expire'];
                         }
 
                         return ['status' => true, 'msg' => $genreAccess->deny_msg];
