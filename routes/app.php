@@ -134,7 +134,7 @@ Route::get('/getip', 'App\Controller\UserController@getip');
 Route::get('/', 'App\Controller\IptvController@index');
 
 // 支付同步回调通知
-Route::get('paypalCallback', 'App\Controller\PayController@paypalCallback');
+Route::get('/paypalCallback', 'App\Controller\PayController@paypalCallback');
 
 // dokypay 同步请求返回
 Route::get('/return/dokypay','App\Controller\PayController@notifyByGet' );

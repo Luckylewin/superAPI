@@ -195,7 +195,7 @@ class ErrorCode
                 $error = 'No need to pay';
                 break;
             case self::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED:
-                $error = 'The current order has been paid successfully, no need to repeat payment';
+                $error = 'The current order has been paid successfully';
                 break;
             case self::$RES_ERROR_INVALID_CALLBACK:
                 $error = "Invalid callback";

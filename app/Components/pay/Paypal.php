@@ -29,6 +29,8 @@ use PayPal\Rest\ApiContext;
 
 class Paypal extends BasePay
 {
+    public static $errorLog = APP_ROOT . 'storage/logs/paypal-error.log';
+
     public function __construct()
     {
        $this->init();
@@ -187,7 +189,6 @@ class Paypal extends BasePay
 
             return ['status' => true, 'order_num' => $invoice_number];
         } catch(\Exception $e){
-
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED];
         }
     }

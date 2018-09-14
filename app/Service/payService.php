@@ -9,6 +9,7 @@
 namespace App\Service;
 
 use App\Components\helper\FileHelper;
+use App\Components\Log;
 use App\Components\pay\DokyPay;
 use App\Components\helper\ArrayHelper;
 use App\Components\pay\Paypal;
@@ -126,18 +127,24 @@ class payService extends common
 
         if ($result['status'] == true) {
             $order_num = $result['order_num'];
-            $order = Capsule::table('iptv_order')
-                            ->where('order_sign' , '=', $order_num)
-                            ->first();
+            $order = $this->findOrderByOrdernum($order_num);
 
             if (is_null($order)) {
+                Log::write(Paypal::$errorLog, "订单{$order_num}支付成功，但是找不到该订单" . PHP_EOL);
                 return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST, $async);
             }
 
             $order = ArrayHelper::toArray($order);
-            $this->callBack($order, $order_num, 'paypal');
 
-            return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
+            if ($order['order_status'] == '0') {
+                $this->updateOrder($order_num);
+                $this->callBack($order, $order_num, 'paypal');
+
+                return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
+            } else {
+                return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED, $async);
+            }
+
         }
 
         return $this->sendResult($result['code'], $async);
@@ -175,9 +182,7 @@ class payService extends common
                 if ($valid) {
                     $order_num = $data['merTransNo'];
                     // 查询订单类别
-                    $order = Capsule::table('iptv_order')
-                                    ->where('order_sign' , '=', $order_num)
-                                    ->first();
+                    $order = $this->findOrderByOrdernum($order_num);
 
                     if (is_null($order)) {
                         return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST, $async);
@@ -186,15 +191,7 @@ class payService extends common
                     $order = ArrayHelper::toArray($order);
 
                     if ($order['order_status'] == '0') {
-                        Capsule::table('iptv_order')
-                                    ->where('order_sign', '=', $order_num)
-                                    ->update([
-                                            'order_ispay' => 1,
-                                            'order_status' => 1,
-                                            'order_paytime' => time(),
-                                            'order_confirmtime' => time()
-                                    ]);
-
+                        $this->updateOrder($order_num);
                         $this->callBack($order, $order_num, 'dokypay');
 
                         return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
@@ -212,6 +209,25 @@ class payService extends common
         } else {
             return $this->sendResult(ErrorCode::$RES_ERROR_INVALID_CALLBACK, $async);
         }
+    }
+
+    private function findOrderByOrdernum($order_num)
+    {
+        return Capsule::table('iptv_order')
+            ->where('order_sign' , '=', $order_num)
+            ->first();
+    }
+
+    private function updateOrder($order_num)
+    {
+        Capsule::table('iptv_order')
+            ->where('order_sign', '=', $order_num)
+            ->update([
+                'order_ispay' => 1,
+                'order_status' => 1,
+                'order_paytime' => time(),
+                'order_confirmtime' => time()
+            ]);
     }
 
     public function sendResult($code, $async)
