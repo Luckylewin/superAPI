@@ -47,11 +47,17 @@ class payService extends common
         $description = $order->order_info;
         $productName = $order->order_info;
 
-        if ($payType == 'dokypay') {
-            $url = $this->dokypay($order_sign, $amount, $description);
-        } else {
-            $url = $this->paypal($order_sign, $amount, $productName, $description);
+        try {
+            if ($payType == 'dokypay') {
+                $url = $this->dokypay($order_sign, $amount, $description);
+            } else {
+                $url = $this->paypal($order_sign, $amount, $productName, $description);
+            }
+
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_GO_WRONG];
         }
+
 
         if ($url == false) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_GO_WRONG];
@@ -77,18 +83,13 @@ class payService extends common
      */
     public function paypal($order_sign, $amount, $productName, $description)
     {
-        try {
-            $paypal = new Paypal();
-            $paypal->setMerTransNo($order_sign);
-            $paypal->setAmount($amount);
-            $paypal->setProduct($productName);
-            $paypal->setDescription($description);
+        $paypal = new Paypal();
+        $paypal->setMerTransNo($order_sign);
+        $paypal->setAmount($amount);
+        $paypal->setProduct($productName);
+        $paypal->setDescription($description);
 
-            return $paypal->unifiedOrder();
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), "ERROR");
-            return false;
-        }
+        return $paypal->unifiedOrder();
     }
 
     /**
@@ -97,19 +98,16 @@ class payService extends common
      * @param $amount
      * @param $description
      * @return string
+     * @throws \Exception
      */
     public function dokypay($order_sign, $amount, $description)
     {
-        try {
-            $dokyPay = new DokyPay();
-            $dokyPay->setMerTransNo($order_sign);
-            $dokyPay->setAmount($amount);
-            $dokyPay->setDescription($description);
-            $url = $dokyPay->unifiedOrder();
-            return $url;
-        } catch (\Exception $e) {
-            return false;
-        }
+        $dokyPay = new DokyPay();
+        $dokyPay->setMerTransNo($order_sign);
+        $dokyPay->setAmount($amount);
+        $dokyPay->setDescription($description);
+        $url = $dokyPay->unifiedOrder();
+        return $url;
     }
 
     /**
