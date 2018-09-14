@@ -56,7 +56,9 @@ class Log
 
     public static function stdout($str)
     {
-        echo $str , PHP_EOL;
+        if (DEBUG) {
+            echo $str , PHP_EOL;
+        }
     }
 
     public static function notifyLog($payType, $message)

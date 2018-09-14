@@ -5,7 +5,7 @@ use Workerman\Connection\TcpConnection;
 use Workerman\Worker;
 use Breeze\App;
 
-Worker::$stdoutFile = '../storage/logs/error.log';
+Worker::$stdoutFile = '../storage/logs/console.log';
 Worker::$logFile = '../storage/logs/workerman.log';
 
 $http_worker = new Worker('http://0.0.0.0:12389');
@@ -31,7 +31,7 @@ define('APP_ROOT', dirname(dirname(__FILE__)) . '/');
 // 日志目录
 define('LOG_PATH', dirname(dirname(__FILE__)) . '/storage/logs/');
 // 调试开关
-define('DEBUG', false);
+define('DEBUG', true);
 
 define('CHARGE_MODE', 2);
 
