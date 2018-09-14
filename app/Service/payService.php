@@ -15,6 +15,7 @@ use App\Components\helper\ArrayHelper;
 use App\Components\pay\Paypal;
 use App\Exceptions\ErrorCode;
 use Breeze\Helpers\Url;
+use Breeze\Http\Request;
 use Endroid\QrCode\QrCode;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -116,7 +117,7 @@ class payService extends common
      * @param bool $async
      * @return array|string
      */
-    public function paypalNotify($request, $async = true)
+    public function paypalNotify(Request $request, $async = true)
     {
         $this->stdout("paypal 同步通知",'INFO');
 
@@ -124,6 +125,9 @@ class payService extends common
         $result = $paypal->notifyCheck($request);
 
         if ($result['status'] == true) {
+
+            Log::write(Paypal::$notifyLog, json_encode($request->get()) . PHP_EOL);
+
             $order_num = $result['order_num'];
             $order = $this->findOrderByOrdernum($order_num);
 
@@ -133,7 +137,7 @@ class payService extends common
             }
 
             $order = ArrayHelper::toArray($order);
-
+            
             if ($order['order_status'] == '0') {
                 $this->updateOrder($order_num);
                 $this->callBack($order, $order_num, 'paypal');
@@ -161,11 +165,10 @@ class payService extends common
         $this->stdout("dokypay {$type}通知",'INFO');
 
         $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
-        FileHelper::createFile($notifyLog);
 
         if (isset($data['transStatus'])) {
 
-            file_put_contents($notifyLog, json_encode($data) . PHP_EOL, FILE_APPEND);
+            Log::write($notifyLog, json_encode($data) . PHP_EOL);
 
             $status = $data['transStatus'];
             if ($status == 'success') {

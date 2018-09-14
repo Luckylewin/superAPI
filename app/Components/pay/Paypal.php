@@ -30,6 +30,7 @@ use PayPal\Rest\ApiContext;
 class Paypal extends BasePay
 {
     public static $errorLog = APP_ROOT . 'storage/logs/paypal-error.log';
+    public static $notifyLog = APP_ROOT . 'storage/logs/paypal-notify.log';
 
     public function __construct()
     {
