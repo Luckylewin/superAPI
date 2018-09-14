@@ -19,6 +19,9 @@ class DokyPay extends BasePay
     private $prodName = 'southeast.asia';
     private $country = 'CN';
 
+    public static $errorLog = APP_ROOT . 'storage/logs/dokypay-error.log';
+    public static $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
+
     public function __construct()
     {
         $this->init();

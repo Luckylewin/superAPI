@@ -5,29 +5,24 @@
  * Date: 2018/7/9
  * Time: 16:42
  */
-
 namespace App\Service;
 
-use App\Components\helper\FileHelper;
 use App\Components\Log;
 use App\Components\pay\DokyPay;
 use App\Components\helper\ArrayHelper;
 use App\Components\pay\Paypal;
 use App\Exceptions\ErrorCode;
-use Breeze\Helpers\Url;
 use Breeze\Http\Request;
 use Endroid\QrCode\QrCode;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class payService extends common
 {
-
     public function pay()
     {
         try {
             $order_sign = $this->post('order_sign');
             $payType = $this->post('pay_type', 'dokypay', ['in', ['dokypay', 'paypal']]);
-
         } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
         }
@@ -39,8 +34,6 @@ class payService extends common
         if (is_null($order)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
         }
-
-
         // 判断订单是否超时
         if (time() - $order->order_addtime >= 1800) {
              return ['status' => false, 'code' => ErrorCode::$RES_ERROR_OVERTIME_PAYMENT];
@@ -64,7 +57,6 @@ class payService extends common
         } catch (\Exception $e) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_GO_WRONG];
         }
-
 
         if ($url == false) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_GO_WRONG];
@@ -167,14 +159,10 @@ class payService extends common
      */
     public function dokypayNotify($data, $async = true)
     {
-        $type = $async ? '异步' : '同步';
-        $this->stdout("dokypay {$type}通知",'INFO');
-
-        $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
+        $this->stdout("dokypay " .  $async ? '异步' : '同步' ."通知",'INFO');
 
         if (isset($data['transStatus'])) {
-
-            Log::write($notifyLog, json_encode($data) . PHP_EOL);
+            Log::write(DokyPay::$notifyLog, json_encode($data) . PHP_EOL);
 
             $status = $data['transStatus'];
             if ($status == 'success') {
@@ -192,12 +180,13 @@ class payService extends common
                     $order = $this->findOrderByOrdernum($order_num);
 
                     if (is_null($order)) {
+                        Log::write(DokyPay::$errorLog, "订单{$order_num}支付成功，但是找不到该订单" . PHP_EOL);
                         return $this->sendResult(ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST, $async);
                     }
 
                     $order = ArrayHelper::toArray($order);
 
-                    if ($order['order_status'] == '0') {
+                    if ($order['order_status'] == '0' || $order['order_ispay'] == 0) {
                         $this->updateOrder($order_num);
                         $this->callBack($order, $order_num, 'dokypay');
 
@@ -279,7 +268,6 @@ class payService extends common
 HTML;
 
         return $doc;
-
     }
 
     public function getOrderInfo()
@@ -411,7 +399,5 @@ HTML;
 
         return true;
     }
-
-
 
 }

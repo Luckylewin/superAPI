@@ -29,8 +29,9 @@ use PayPal\Rest\ApiContext;
 
 class Paypal extends BasePay
 {
-    public static $errorLog = APP_ROOT . 'storage/logs/paypal-error.log';
-    public static $notifyLog = APP_ROOT . 'storage/logs/paypal-notify.log';
+    public static $errorLog = LOG_PATH . 'paypal-error.log';
+    public static $notifyLog = LOG_PATH . 'paypal-notify.log';
+    public static $infoLog = LOG_PATH . 'paypal-info.log';
 
     public function __construct()
     {
@@ -45,7 +46,7 @@ class Paypal extends BasePay
         $this->setReturnUrl(Url::to('paypalCallback',['success'=>'true']));
         $this->setCancelUrl(Url::to('paypalCallback',['success'=>'false']));
 
-        $logFile = LOG_PATH . 'paypal.log';
+        $logFile = self::$infoLog;
         FileHelper::createFile($logFile);
 
         $apiContext = new ApiContext(new OAuthTokenCredential($this->app_id, $this->app_key));
@@ -53,7 +54,7 @@ class Paypal extends BasePay
             'mode' => 'live',
             'log.LogEnabled' => true,
             'log.FileName' => $logFile,
-            'log.LogLevel' => 'DEBUG', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
+            'log.LogLevel' => 'INFO', // PLEASE USE `INFO` LEVEL FOR LOGGING IN LIVE ENVIRONMENTS
             'cache.enabled' => true,
         ]);
 
