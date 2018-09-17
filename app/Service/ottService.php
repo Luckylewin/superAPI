@@ -1384,6 +1384,9 @@ class ottService extends common
         Capsule::beginTransaction();
 
         try {
+
+            $access_key = md5($cardSecret . $this->uid);
+
             if (!empty($access)) {
                 $baseTime =  $access->expire_time > time() ? $access->expire_time : time();
                 $expire_time = $baseTime +  $addTime ;
@@ -1397,7 +1400,8 @@ class ottService extends common
                     ->update([
                         'is_valid' => 1,
                         'expire_time' => $expire_time,
-                        'deny_msg' => 'normal usage'
+                        'deny_msg' => 'normal usage',
+                        'access_key' => $access_key
                     ]);
             } else {
                 $expire_time = time() +  $addTime;
@@ -1407,7 +1411,8 @@ class ottService extends common
                         'genre' => $genre,
                         'is_valid' => 1,
                         'expire_time' =>  $expire_time,
-                        'deny_msg' => 'normal usage'
+                        'deny_msg' => 'normal usage',
+                        'access_key' => $access_key
                     ]);
             }
 
@@ -1432,7 +1437,8 @@ class ottService extends common
                 'data' => [
                     'mac' => $this->uid,
                     'genre' => $genre,
-                    'expire_time' => $expire_time
+                    'expire_time' => $expire_time,
+                    'access_key' => $access_key
                 ]
             ];
 
@@ -1472,14 +1478,8 @@ class ottService extends common
     {
         try {
             $app_name = $this->post('app_name');
-            $password = $this->post('password');
         } catch (\Exception $e) {
             return ['status' => false, 'code' => $e->getCode()];
-        }
-
-        if ($password != '80123') {
-            $this->stdout("不正确的暗号", 'ERROR');
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
         }
 
         $exists = Capsule::table('app_locker_switcher')
