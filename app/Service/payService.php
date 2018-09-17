@@ -347,14 +347,16 @@ HTML;
                 ->update([
                     'is_valid' => 1,
                     'expire_time' => $expire_time,
-                    'deny_msg' => 'normal usage'
+                    'deny_msg' => 'normal usage',
+                    'access_key' => $ott_order['access_key']
                 ]);
         } else {
             Capsule::table('ott_access')
                 ->insert([
                     'is_valid' => 1,
                     'expire_time' => time() + $ott_order->expire_time,
-                    'deny_msg' => 'normal usage'
+                    'deny_msg' => 'normal usage',
+                    'access_key' => $ott_order['access_key']
                 ]);
         }
 

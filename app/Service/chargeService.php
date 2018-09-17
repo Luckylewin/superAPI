@@ -112,7 +112,7 @@ class chargeService extends common
         $order['order_money'] = $goods['price'];
         $order['order_uid'] = $this->uid;
         $order['order_total'] = 1;
-        $order['order_info'] = "直播分类收费";
+        $order['order_info'] = "直播分类收费({$genre['name']})";
         $order['order_paytype'] = '';
         $order['order_type'] = 'ott';
         $order['order_addtime'] = time();
@@ -122,6 +122,7 @@ class chargeService extends common
         $ott['uid'] = $this->uid;
         $ott['genre'] = $genre['list_name'];
         $ott['expire_time'] = $goods['time'];
+        $ott['access_key'] = md5($order_sign . $this->uid . $ott['genre']);
 
         Capsule::beginTransaction();
         try {
@@ -136,6 +137,7 @@ class chargeService extends common
                     'order_money' => $order['order_money'],
                     'order_uid' => $this->uid,
                     'order_info' => $order['order_info'],
+                    'access_key' => $ott['access_key'],
                     'expire' => time() + 1800
                 ]
             ];

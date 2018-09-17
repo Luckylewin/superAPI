@@ -17,7 +17,7 @@ class AuthMiddleware implements MiddlewareInterface
 {
     public function handle(Request $request)
     {
-        echo "Auth中间件执行" . PHP_EOL;
+        //echo "Auth中间件执行" . PHP_EOL;
 
         $mac = $request->post()->uid;
         $data = $request->post()->data;
