@@ -31,7 +31,7 @@ $worker->onConnect = function(TcpConnection $connection)
     // 接到真实服务器响应信息，返回给客户端
     $connection_to_server->onMessage = function($connection_to_server, $buffer) use ($connection)
     {
-        //echo 'from server :' . $buffer . PHP_EOL;
+        echo 'from server :' . $buffer . PHP_EOL;
         $connection->send($buffer);
     };
 
