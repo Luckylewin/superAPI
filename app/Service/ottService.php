@@ -418,7 +418,7 @@ class ottService extends common
             return ['status' => false, 'code' => $e->getCode()];
         }
 
-        $access = $this->judgeAccess($this->uid,$access_key);
+        $access = $this->judgeAccess($genre,$access_key);
 
         if ($access['status'] === false) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PERMISSION_DENY];
@@ -429,16 +429,16 @@ class ottService extends common
 
     /**
      * 根据收费模式判断用户的权限
-     * @param $class
+     * @param $genreName
      * @param $access_key
      * @return array
      */
-    private function judgeAccess($class, $access_key)
+    private function judgeAccess($genreName, $access_key)
     {
         if (CHARGE_MODE == 1) {
              return $this->chargeWithMember();
         } else if(CHARGE_MODE == 2) {
-             return $this->chargeWithGenre($class,$access_key);
+             return $this->chargeWithGenre($genreName,$access_key);
         }
 
         return ['status' => true, 'msg' => 'ok'];
@@ -446,16 +446,16 @@ class ottService extends common
 
     /**
      * 根据分类收费
-     * @param $class
+     * @param $genreName
      * @param $access_key
      * @return array
      */
-    protected function chargeWithGenre($class, $access_key)
+    protected function chargeWithGenre($genreName, $access_key)
     {
         // 判断是否为收费类别
         $genre = Capsule::table('ott_main_class')
                         ->select('is_charge','free_trail_days','list_name')
-                        ->where('list_name', '=', $class)
+                        ->where('list_name', '=', $genreName)
                         ->first();
 
         if (!is_null($genre) && $genre->is_charge) {
