@@ -20,11 +20,13 @@ class common
     public $uid;
     public $data;
     public $redis;
+    public $request;
 
     public function __construct(Request $request)
     {
         $this->uid = $request->post('uid');
         $this->data = $request->post('data');
+        $this->request = $request;
     }
 
     /**

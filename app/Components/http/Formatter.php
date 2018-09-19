@@ -63,9 +63,9 @@ class Formatter
     // 设置响应格式
     public static function setFormat($format)
     {
-        if ($format == 'json') {
+        if ($format == self::JSON) {
             Response::format(Response::JSON);
-        } else if ($format == 'xml') {
+        } else if ($format == self::XML) {
             Response::format(Response::XML);
         } else {
             Response::format(Response::TEXT);
@@ -85,6 +85,16 @@ class Formatter
         $data['data'] = $new_data;
 
         return json_encode($data);
+    }
+
+    public static function back($data, $code)
+    {
+        static::setFormat(self::JSON);
+        $header['code'] = $code;
+        $header['msg'] = ErrorCode::getError($code);
+        $header['data'] = $data;
+
+        return json_encode($header);
     }
 
 }

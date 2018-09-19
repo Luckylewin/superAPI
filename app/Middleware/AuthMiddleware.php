@@ -18,7 +18,7 @@ class AuthMiddleware implements MiddlewareInterface
     public function handle(Request $request)
     {
         //echo "Auth中间件执行" . PHP_EOL;
-
+       
         $mac = $request->post()->uid;
         $data = $request->post()->data;
         $token = isset($data['token']) ? $data['token'] : null;
@@ -30,6 +30,7 @@ class AuthMiddleware implements MiddlewareInterface
         }
 
          if ($result['status'] === false) {
+             Formatter::$header = $request->post('header');
              return function() use ($result) {
                  return Formatter::response($result['code']);
              };

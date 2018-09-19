@@ -241,8 +241,8 @@ class ottService extends common
         $event_time = $date == $currentDate ? $time : '24:00';
 
         //语言选项
-        $title = self::_get18ln('title', $language);
-        $team_name = self::_get18ln('team_name', $language);
+        $title = self::_geti18n('title', $language);
+        $team_name = self::_geti18n('team_name', $language);
 
         if (isset($teams[0]) && isset($teams[1])) {
             //比赛信息
@@ -266,7 +266,6 @@ class ottService extends common
                 ]
             ];
         }
-
 
         return $event_info;
     }
@@ -430,17 +429,16 @@ class ottService extends common
 
     /**
      * 根据收费模式判断用户的权限
-     * @param $uid
      * @param $class
      * @param $access_key
      * @return array
      */
-    private function judgeAccess($uid, $class, $access_key)
+    private function judgeAccess($class, $access_key)
     {
         if (CHARGE_MODE == 1) {
-             return $this->chargeWithMember($uid);
+             return $this->chargeWithMember();
         } else if(CHARGE_MODE == 2) {
-             return $this->chargeWithGenre($uid, $class, $access_key);
+             return $this->chargeWithGenre($class,$access_key);
         }
 
         return ['status' => true, 'msg' => 'ok'];
@@ -448,147 +446,187 @@ class ottService extends common
 
     /**
      * 根据分类收费
-     * @param $uid
      * @param $class
      * @param $access_key
      * @return array
      */
-    protected function chargeWithGenre($uid, $class, $access_key)
+    protected function chargeWithGenre($class, $access_key)
     {
         // 判断是否为收费类别
         $genre = Capsule::table('ott_main_class')
                         ->select('is_charge','free_trail_days','list_name')
-                        ->where('name', '=', $class)
+                        ->where('list_name', '=', $class)
                         ->first();
 
-        if (isset($genre->is_charge) && $genre->is_charge) {
-
-            // 判断查询Access_key 判断权限表
-            $genreAccess = Capsule::table('ott_access')
-                                ->select(['is_valid','expire_time', 'deny_msg', 'access_key'])
-                                ->where([
-                                    ['mac', '=',  $uid],
-                                    ['genre', '=',  $class]
-                                ])
-                                ->first();
-
-            if (is_null($genreAccess)) {
-
-                // 查询是否已经存在试用期
-                $probation = Capsule::table('ott_genre_probation')
-                    ->where([
-                        ['mac', '=',  $uid],
-                        ['genre', '=', $class],
-                    ])
-                    ->first();
-
-                if (!empty($probation)) {
-                    if ($probation->expire_time > time()) {
-                        Capsule::table('ott_access')
-                            ->insert([
-                                'mac' => $uid,
-                                'genre' => $genre->list_name,
-                                'is_valid' => 1,
-                                'expire_time' =>  $probation->expire_time,
-                                'deny_msg' => 'normal usage'
-                            ]);
-                        return ['status' => true, 'msg' => 'ok'];
-                    } else {
-                        Capsule::table('ott_access')
-                            ->insert([
-                                'mac' => $uid,
-                                'genre' => $genre->list_name,
-                                'is_valid' => 0,
-                                'expire_time' =>  $probation->expire_time,
-                                'deny_msg' => 'expire of probation'
-                            ]);
-
-                        $this->stdout("分类过期", 'ERROR');
-                        return ['status' => false, 'msg' => "试用过期"];
-                    }
-                }
-
-                // 查询免费使用天数
-                $day = $genre->free_trail_days;
-                $expireTime = strtotime("+ {$day}day");
-
-                Capsule::beginTransaction();
-                try {
-
-                    Capsule::table('ott_genre_probation')
-                        ->insert([
-                            'mac'  => $uid,
-                            'genre' => $class,
-                            'day' => date('Y-m-d'),
-                            'expire_time' => $expireTime,
-                            'created_at' => time(),
-                            'updated_at' => time()
-                        ]);
-
-                    Capsule::table('ott_access')
-                        ->insert([
-                            'mac' => $uid,
-                            'genre' => $genre->list_name,
-                            'is_valid' => 1,
-                            'expire_time' =>  $expireTime,
-                            'deny_msg' => 'normal usage'
-                        ]);
-                    Capsule::commit();
-                    return ['status' => true, 'msg' => 'ok'];
-
-                } catch (\Exception $e) {
-                    Capsule::rollback();
-                    $this->stdout("数据库事务回滚" . $e->getMessage(), 'ERROR');
-                    return ['status' => false, 'msg' => '服务器错误'];
-                }
-
-            } else {
-
-                if ($access_key != $genreAccess->access_key) {
-                    return ['status' => false, 'msg' => 'expire'];
-                }
-
-                // 不为空
-                if ($genreAccess->is_valid == 1) {
-                    // 判断是否过期 如果过期 更新状态
-                    if ($genreAccess->expire_time < time()) {
-                        Capsule::table('ott_access')
-                            ->where([
-                                ['mac', '=',  $uid],
-                                ['genre', '=', $class],
-                            ])
-                            ->update([
-                                'is_valid' => 0,
-                                'deny_msg' => 'expire'
-                            ]);
-                        $this->stdout("分类过期", 'ERROR');
-
-                        return ['status' => false, 'msg' => 'expire'];
-                    }
-
-                    return ['status' => true, 'msg' => $genreAccess->deny_msg];
-                } else {
-                    $this->stdout("分类过期", 'ERROR');
-                    return ['status' => false, 'msg' => $genreAccess->deny_msg];
-                }
-            }
-
+        if (!is_null($genre) && $genre->is_charge) {
+            return $this->genreCharged($genre, $access_key);
+        } else {
+            return $this->genreFree();
         }
     }
 
+    /**
+     * 免费的时候
+     * @return array
+     */
+    protected function genreFree()
+    {
+        return ['status' => true, 'msg' => 'ok'];
+    }
+
+    /**
+     * 收费的时候
+     * @param $genre
+     * @param $access_key
+     * @return array
+     */
+    protected function genreCharged($genre, $access_key)
+    {
+        // 判断查询Access_key 判断权限表
+        $genreAccess = Capsule::table('ott_access')
+            ->select(['is_valid','expire_time', 'deny_msg', 'access_key'])
+            ->where([
+                ['mac', '=',  $this->uid],
+                ['genre', '=',  $genre->list_name]
+            ])
+            ->first();
+
+        if (is_null($genreAccess)) {
+            return $this->judgeWhenAccessKeyNotExist($genre);
+        } else {
+            return $this->judgeWhenAccessKeyExist($genreAccess, $genre->list_name, $access_key);
+        }
+    }
+
+    /**
+     * access_key 不存在时判断试用期
+     * @param $genre
+     * @return array
+     */
+    protected function judgeWhenAccessKeyNotExist($genre)
+    {
+        // 查询是否已经存在试用期
+        $probation = Capsule::table('ott_genre_probation')
+                            ->where([
+                                ['mac', '=',  $this->uid],
+                                ['genre', '=', $genre->list_name],
+                            ])
+                            ->first();
+
+        if (!empty($probation)) {
+            if ($probation->expire_time > time()) {
+                Capsule::table('ott_access')
+                    ->insert([
+                        'mac' => $this->uid,
+                        'genre' => $genre->list_name,
+                        'is_valid' => 1,
+                        'expire_time' =>  $probation->expire_time,
+                        'deny_msg' => 'normal usage'
+                    ]);
+                return ['status' => true, 'msg' => 'ok'];
+
+            } else {
+                Capsule::table('ott_access')
+                    ->insert([
+                        'mac' => $this->uid,
+                        'genre' => $genre->list_name,
+                        'is_valid' => 0,
+                        'expire_time' =>  $probation->expire_time,
+                        'deny_msg' => 'expire of probation'
+                    ]);
+
+                $this->stdout("分类过期", 'ERROR');
+                return ['status' => false, 'msg' => "试用过期"];
+            }
+        }
+
+        // 查询免费使用天数
+        $day = $genre->free_trail_days;
+        $expireTime = strtotime("+ {$day}day");
+
+        Capsule::beginTransaction();
+        try {
+
+            Capsule::table('ott_genre_probation')
+                ->insert([
+                    'mac'  => $this->uid,
+                    'genre' => $genre->list_name,
+                    'day' => date('Y-m-d'),
+                    'expire_time' => $expireTime,
+                    'created_at' => time(),
+                    'updated_at' => time()
+                ]);
+
+            Capsule::table('ott_access')
+                ->insert([
+                    'mac' => $this->uid,
+                    'genre' => $genre->list_name,
+                    'is_valid' => 1,
+                    'expire_time' =>  $expireTime,
+                    'deny_msg' => 'normal usage'
+                ]);
+            Capsule::commit();
+
+            return ['status' => true, 'msg' => 'ok'];
+
+        } catch (\Exception $e) {
+            Capsule::rollback();
+            $this->stdout("数据库事务回滚" . $e->getMessage(), 'ERROR');
+
+            return ['status' => false, 'msg' => '服务器错误'];
+        }
+    }
+
+    /**
+     * 当access_key 存在的时候
+     * @param $genreAccess
+     * @param $class
+     * @param $access_key
+     * @return array
+     */
+    protected function judgeWhenAccessKeyExist($genreAccess, $class, $access_key)
+    {
+        if ($access_key != $genreAccess->access_key) {
+            return ['status' => false, 'msg' => 'expire'];
+        }
+
+        // 不为空
+        if ($genreAccess->is_valid == 1) {
+            // 判断是否过期 如果过期 更新状态
+            if ($genreAccess->expire_time < time()) {
+                Capsule::table('ott_access')
+                    ->where([
+                        ['mac', '=',  $this->uid],
+                        ['genre', '=', $class],
+                    ])
+                    ->update([
+                        'is_valid' => 0,
+                        'deny_msg' => 'expire'
+                    ]);
+                $this->stdout("分类过期", 'ERROR');
+
+                return ['status' => false, 'msg' => 'expire'];
+            }
+
+            return ['status' => true, 'msg' => $genreAccess->deny_msg];
+        } else {
+            $this->stdout("分类过期", 'ERROR');
+
+            return ['status' => false, 'msg' => $genreAccess->deny_msg];
+        }
+    }
 
     /**
      * 根据会员收费
-     * @param $uid
      * @return array
      */
-    protected function chargeWithMember($uid)
+    protected function chargeWithMember()
     {
         // 判断用户是否有权限(判断是否为会员)
         $user = Capsule::table('yii2_user')
-            ->select('is_vip')
-            ->where('username', '=', $uid)
-            ->first();
+                        ->select('is_vip')
+                        ->where('username', '=', $this->uid)
+                        ->first();
 
         if ($user->is_vip == false) {
             $this->stdout("不是会员", 'ERROR');
@@ -921,7 +959,7 @@ class ottService extends common
      * @param $lang
      * @return mixed
      */
-    static private function _get18ln($field, $lang)
+    static private function _geti18n($field, $lang)
     {
         if ($lang == 'en') {
             return $field;
@@ -1454,19 +1492,12 @@ class ottService extends common
     // 隐藏内容锁状态
     public function getLockStatus()
     {
-        try {
-            $app_name = $this->post('app_name');
-        } catch (\Exception $e) {
-            $this->stdout($e->getCode(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-        $exists = Capsule::table('app_locker_switcher')
-                        ->where([
-                            [ 'mac' ,'=', $this->uid],
-                            [ 'app_name' ,'=', $app_name]
-                        ])->exists();
+        $mac = Capsule::table('mac')
+                        ->select('is_hide')
+                        ->where('MAC' ,'=', $this->uid)
+                        ->first();
 
-        if ($exists) {
+        if (!is_null($mac) && $mac->is_hide == 1) {
             return ['status' => true, 'data' => ['display' => 'hide']];
         } else {
             return ['status' => true, 'data' => ['display' => 'show']];
@@ -1476,24 +1507,16 @@ class ottService extends common
     // 解锁内容
     public function relieveLock()
     {
-        try {
-            $app_name = $this->post('app_name');
-        } catch (\Exception $e) {
-            return ['status' => false, 'code' => $e->getCode()];
-        }
+        $mac = Capsule::table('mac')
+                        ->where('mac' ,'=', $this->uid)
+                        ->first();
 
-        $exists = Capsule::table('app_locker_switcher')
-                        ->where([
-                            [ 'mac' ,'=', $this->uid],
-                            [ 'app_name' ,'=', $app_name]
-                        ])
-                        ->exists();
-
-        if ($exists) {
-            Capsule::table('app_locker_switcher')->where([
-                [ 'mac' ,'=', $this->uid],
-                [ 'app_name' ,'=', $app_name]
-            ])->delete();
+        if (!is_null($mac)) {
+            Capsule::table('mac')
+                        ->where('mac' ,'=', $this->uid)
+                        ->update([
+                            'is_hide' => 0
+                        ]);
         }
 
         return ['status' => true, 'data' => [

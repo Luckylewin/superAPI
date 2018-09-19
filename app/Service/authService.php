@@ -29,6 +29,41 @@ class authService extends common
         $this->clientIP = $request->ip();
     }
 
+    public function login()
+    {
+        $this->uid = $this->request->post('mac');
+        $timestamp = $this->request->post('timestamp');
+        $signature = $this->request->post('signature');
+
+        if (empty($this->uid) || empty($timestamp) || empty($signature)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER_MISSING];
+        }
+
+        if (abs(time() - $timestamp) > 15) {
+           return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_REQUEST];
+        }
+
+        $serverSign = md5(md5($this->uid . $timestamp) . md5('topthinker' . $timestamp));
+        if ($serverSign != $signature) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
+        }
+
+        try {
+            $macInfo = $this->_getMacInfo($this->uid, $this->uid);
+            $this->_checkIsExpire($macInfo);
+            $this->_checkIsActive($macInfo);
+            $tokenData = $this->_generateToken($this->uid);
+            $macInfo['access_token'] = $tokenData['token'];
+            $macInfo['access_token_expire'] = $tokenData['expire'];
+            $this->_updateInfo($macInfo);
+
+            return ['status' => true, 'data' => $macInfo];
+
+        } catch (\Exception $e) {
+            return ['status' => false, 'code' => $e->getCode()];
+        }
+    }
+
 
     /**
      * 获取令牌
@@ -38,7 +73,6 @@ class authService extends common
     {
         $data = $this->data;
         $uid = $this->uid;
-        $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
 
         try {
             //检查参数
@@ -52,21 +86,30 @@ class authService extends common
             }
 
             //从redis/mysql中获取用户数据
-            $macInfo = $this->_getMacInfo($uid,$decryptStr);
+            $SN = $this->_getSN($decryptStr);
+
+            $macInfo = $this->_getMacInfo($uid, $SN);
             //检查用户是否过期
             $this->_checkIsExpire($macInfo);
             //检查用户是否激活
             $this->_checkIsActive($macInfo);
+            // 生成token
+            $tokenData = $this->_generateToken($uid);
+            $macInfo['access_token'] = $tokenData['token'];
+            $macInfo['access_token_expire'] = $tokenData['expire'];
+
             //更新用户登录信息
             $this->_updateInfo($macInfo);
+
             //返回新生成的token值
-            return ['status' => true, 'data' => $this->_generateToken($uid)];
+            return ['status' => true, 'data' => json_encode($tokenData)];
 
         } catch (\Exception $e){
             $this->stdout($e->getMessage(), 'ERROR');
            return ['status' => false, 'code' => $e->getCode()];
         }
     }
+
 
     /**
      * 验证token restful yii2
@@ -249,13 +292,12 @@ class authService extends common
     /**
      * 获取用户数据
      * @param $MAC
-     * @param $decryptStr
+     * @param $SN
      * @return array
      * @throws \Exception
      */
-    private function _getMacInfo($MAC,$decryptStr)
+    private function _getMacInfo($MAC, $SN)
     {
-        $SN = $this->_getSN($decryptStr);
         $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
         $macInfo = $cache->hmGet($MAC, array('MAC','SN','use_flag','duetime','contract_time','logintime'));
 
@@ -321,6 +363,7 @@ class authService extends common
             if ($macInfo['use_flag'] == 3) {
                 throw new \Exception("MAC用户被加入黑名单",ErrorCode::$RES_ERROR_UID_IS_BLACK_LIST);
             }
+
             //激活 更新过期时间
             $duetime = "0000-00-00 00:00:00";
             $periods = array('month','year','day');
@@ -333,6 +376,7 @@ class authService extends common
                     }
                 }
             }
+
             $updateData['duetime'] = $duetime;
             $updateData['use_flag'] = 1;
             $updateData['regtime'] = date('Y-m-d H:i:s');
@@ -357,23 +401,27 @@ class authService extends common
      */
     private function _updateInfo($macInfo)
     {
-
         if (date('Ymd',strtotime($macInfo['logintime'])) != date('Ymd')) {
-            $updateInfo = [ 'logintime' => date('Y-m-d H:i:s') ];
+
+            $updateInfo = [
+                'logintime' => date('Y-m-d H:i:s'),
+                'access_token' => $macInfo['access_token'],
+                'access_token_expire' => $macInfo['access_token_expire'],
+            ];
+
             Capsule::table('mac')
                     ->where([
                         ['MAC', '=', $macInfo['MAC']],
                         ['SN', '=', $macInfo['SN']]
                     ])
                     ->update($updateInfo);
-
         }
     }
 
     /**
      * 生成用户token
      * @param $MAC
-     * @return string
+     * @return array
      */
     private function _generateToken($MAC)
     {
@@ -381,11 +429,11 @@ class authService extends common
         $login_token = $this->_generateLoginToken($MAC);
 
         //echo "服务器响应：token:{$token['token']}",PHP_EOL;
-        return json_encode(array(
+        return [
             'token' => $token['token'],
             'expire' => $token['expire'],
             'login_token' => $login_token,
-        ));
+        ];
     }
 
     private function _generateAccessToken($MAC)

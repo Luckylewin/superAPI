@@ -62,6 +62,7 @@ class ErrorCode
     public static $RES_ERROR_PAYMENT_FAILED = 45;
     public static $RES_SUCCESS_PAYMENT_SUCCESS = 46;
     public static $RES_ERROR_OVERTIME_PAYMENT  = 47;
+    public static $RES_ERROR_INVALID_REQUEST  = 48;
 
 
 
@@ -69,6 +70,9 @@ class ErrorCode
     {
         switch ($code)
         {
+            case self::$RES_SUCCESS:
+                $error = "success";
+                break;
             case self::$RES_ERROR_INVALID_SIGN:
                 $error = "invalid sign";
                 break;
@@ -209,6 +213,9 @@ class ErrorCode
                 break;
             case self::$RES_ERROR_OVERTIME_PAYMENT:
                 $error = 'Overtime payment';
+                break;
+            case self::$RES_ERROR_INVALID_REQUEST:
+                $error = 'Invalid Request';
                 break;
             default:
                 $error = "other error";

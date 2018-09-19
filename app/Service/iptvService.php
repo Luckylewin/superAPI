@@ -5,17 +5,91 @@ use App\Components\cache\Redis;
 use App\Components\helper\ArrayHelper;
 use App\Components\helper\Func;
 use App\Exceptions\ErrorCode;
+use Breeze\Helpers\Url;
 use Snoopy\Snoopy;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class iptvService extends common
 {
+
+     public function getVods()
+     {
+         $genres = Capsule::table('iptv_vod')->select('*')->limit(10)->get();
+         if (count($genres) <= 0) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+
+         $genres = ArrayHelper::toArray($genres);
+
+         array_walk($genres, function(&$v) {
+             $v['_links'] = [
+                 'self' => [
+                     Url::to('vods/' . $v['id'])
+                 ],
+                 'recommend' => [
+                     Url::to('recommend/' . $v['id'] )
+                 ],
+
+             ];
+         });
+
+         return ['status' => true, 'data' => $genres];
+     }
+
+     public function getType()
+     {
+         $genres = Capsule::table('iptv_list')->select(['list_id', 'list_name', 'list_dir', 'list_ispay', 'list_price', 'list_trysee', 'list_icon'])->get();
+         if (count($genres) <= 0) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+
+         $genres = ArrayHelper::toArray($genres);
+
+         array_walk($genres, function(&$v) {
+             $v['_links'] = [
+                 'self' => [
+                     Url::to('types/' . $v['list_id'])
+                  ],
+                 'index' => [
+                     Url::to('types' )
+                  ],
+                 'vod' => [
+                     Url::to('vods' , ['cid' => $v['list_id']])
+                  ],
+             ];
+         });
+
+         return ['status' => true, 'data' => $genres];
+     }
+
+     public function getBanner()
+     {
+         $banners = Capsule::table('sys_banner')->select('*')->get();
+         if (count($banners) <= 0) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+         $banners = ArrayHelper::toArray($banners);
+
+         array_walk($banners, function(&$v) {
+             $v['_links'] = [
+                 'self' => [Url::to('banners/' . $v['id'])],
+                 'vod' => [Url::to('vods/' . $v['vod_id'])],
+             ];
+         });
+
+         return ['status' => true, 'data' => $banners];
+     }
+
      public function getKaraokeList()
      {
-         $name = $this->post('name', '');
-         $lang = $this->post('lang', '');
-         $tags = $this->post('tags', '');
-         $sort = $this->post('sort', 'update_time:asc');
+         try {
+             $name = $this->post('name', '');
+             $lang = $this->post('lang', '');
+             $tags = $this->post('tags', '');
+             $sort = $this->post('sort', 'update_time:asc');
+         } catch (\Exception $e) {
+             return ['status' => false, 'code' => $e->getCode()];
+         }
 
          list($field, $direct) = explode(':',$sort);
 

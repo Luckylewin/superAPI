@@ -132,9 +132,15 @@ class Request
         $this->_request = (object) $data;
     }
 
-    public function server()
+    public function server($key = null)
     {
-        return $this->_server;
+        if (is_null($key)) {
+            return $this->_server;
+        } else if (isset($this->_server->$key)) {
+            return $this->_server->$key;
+        } else {
+            return null;
+        }
     }
 
     public function rawData()

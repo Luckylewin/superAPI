@@ -130,8 +130,7 @@ Route::group(['middleware' => 'json'], function() {
 // 获取客户端ip
 Route::get('/getip', 'App\Controller\UserController@getip');
 
-// 点播
-Route::get('/', 'App\Controller\IptvController@index');
+
 
 // 支付同步回调通知
 Route::get('/paypalCallback', 'App\Controller\PayController@paypalCallback');
@@ -145,3 +144,27 @@ Route::post('/notify/dokypay','App\Controller\PayController@notifyByPost' );
 // hello world
 Route::get('/index','App\Controller\IndexController@index' );
 
+// 点播播放
+Route::get('/', 'App\Controller\PlayController@index');
+
+// 点播鉴权
+Route::post('/auth/token', 'App\Controller\IptvController@auth');
+
+// banners
+Route::get('/banners', 'App\Controller\IptvController@getBanner');
+
+// 获取分类
+Route::get('/types', 'App\Controller\IptvController@getType');
+
+//点播节目
+Route::get('/vods', 'App\Controller\IptvController@getVods');
+
+Route::get('/vod-links', 'App\Controller\IptvController@vods');
+
+Route::get('/recommends', 'App\Controller\IptvController@vods');
+
+Route::get('/vods/home', 'App\Controller\IptvController@vods');
+
+Route::get('/vods/condition', 'App\Controller\IptvController@vods');
+
+Route::get('/apk/upgrade', 'App\Controller\IptvController@vods');
