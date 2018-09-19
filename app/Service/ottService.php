@@ -586,7 +586,7 @@ class ottService extends common
      */
     protected function judgeWhenAccessKeyExist($genreAccess, $class, $access_key)
     {
-        if ($access_key != $genreAccess->access_key) {
+        if ($access_key && $access_key != $genreAccess->access_key) {
             return ['status' => false, 'msg' => 'expire'];
         }
 
