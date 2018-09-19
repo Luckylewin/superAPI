@@ -749,8 +749,9 @@ class ottService extends common
         $response['version'] = date('YmdHi');
         $response['items'] = $parade ;
 
-        $this->getRedis($redisDB)->set($redisKey, json_encode($response));
-        $this->getRedis($redisDB)->expire($redisKey, 3600);
+        $redis = $this->getRedis($redisDB);
+        $redis->set($redisKey, json_encode($response));
+        $redis->expire($redisKey, 3600);
 
         if (empty($parade)) {
             $this->stdout("没有数据", 'ERROR');
