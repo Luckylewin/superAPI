@@ -418,7 +418,7 @@ class ottService extends common
             return ['status' => false, 'code' => $e->getCode()];
         }
 
-        $access = $this->judgeAccess($this->uid, $genre, $access_key);
+        $access = $this->judgeAccess($this->uid,$access_key);
 
         if ($access['status'] === false) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PERMISSION_DENY];
