@@ -189,6 +189,35 @@ class authService extends common
         return ['status' => true];
     }
 
+    /**
+     * 简单校验accessToken
+     * @param $accessToken
+     * @return bool
+     */
+    public function validateAccessToken($accessToken)
+    {
+        $mac = Capsule::table('mac')
+                        ->select('MAC')
+                        ->where('access_token', '=', $accessToken)
+                        ->first();
+
+        if (is_null($mac)) {
+            return false;
+        }
+        
+        $info = $this->_decryptToken($mac->MAC, $accessToken);
+
+        //判断是否过期
+        if ($info['expire'] <= time()) {
+            return false;
+        }
+        if ($info['clientIP'] != $this->request->ip()) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function _decryptToken($MAC,$Token)
     {
         $Token = str_replace('*','=',$Token);
@@ -401,21 +430,18 @@ class authService extends common
      */
     private function _updateInfo($macInfo)
     {
-        if (date('Ymd',strtotime($macInfo['logintime'])) != date('Ymd')) {
+        $updateInfo = [
+            'logintime' => date('Y-m-d H:i:s'),
+            'access_token' => $macInfo['access_token'],
+            'access_token_expire' => $macInfo['access_token_expire'],
+        ];
 
-            $updateInfo = [
-                'logintime' => date('Y-m-d H:i:s'),
-                'access_token' => $macInfo['access_token'],
-                'access_token_expire' => $macInfo['access_token_expire'],
-            ];
-
-            Capsule::table('mac')
-                    ->where([
-                        ['MAC', '=', $macInfo['MAC']],
-                        ['SN', '=', $macInfo['SN']]
-                    ])
-                    ->update($updateInfo);
-        }
+        Capsule::table('mac')
+            ->where([
+                ['MAC', '=', $macInfo['MAC']],
+                ['SN', '=', $macInfo['SN']]
+            ])
+            ->update($updateInfo);
     }
 
     /**

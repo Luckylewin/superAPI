@@ -348,7 +348,7 @@ HTML;
                     'is_valid' => 1,
                     'expire_time' => $expire_time,
                     'deny_msg' => 'normal usage',
-                    'access_key' => $ott_order['access_key']
+                    'access_key' => $ott_order->access_key
                 ]);
         } else {
             Capsule::table('ott_access')
@@ -356,7 +356,7 @@ HTML;
                     'is_valid' => 1,
                     'expire_time' => time() + $ott_order->expire_time,
                     'deny_msg' => 'normal usage',
-                    'access_key' => $ott_order['access_key']
+                    'access_key' => $ott_order->access_key
                 ]);
         }
 

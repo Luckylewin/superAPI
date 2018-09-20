@@ -90,7 +90,7 @@ class Formatter
     public static function back($data, $code)
     {
         static::setFormat(self::JSON);
-        $header['code'] = $code;
+        $header['code'] = "10" . $code;
         $header['msg'] = ErrorCode::getError($code);
         $header['data'] = $data;
 

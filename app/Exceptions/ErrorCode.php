@@ -215,7 +215,7 @@ class ErrorCode
                 $error = 'Overtime payment';
                 break;
             case self::$RES_ERROR_INVALID_REQUEST:
-                $error = 'Invalid Request';
+                $error = 'Your request was made with invalid credentials.';
                 break;
             default:
                 $error = "other error";

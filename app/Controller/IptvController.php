@@ -59,5 +59,70 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
+    public function getVod($id)
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getVod($id);
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getVodLinks($vod_id)
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getVodLinks();
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getRecommends($id)
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getRecommends($id);
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function vodHome()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->vodHome();
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getCondition()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getCondition();
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getLink($id)
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getLink($id);
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
 
 }

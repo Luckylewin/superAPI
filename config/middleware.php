@@ -7,6 +7,7 @@
  */
 use App\Middleware\AuthMiddleware;
 use App\Middleware\JsonMiddleware;
+use \App\Middleware\TokenMiddleware;
 
 return [
      // 全局中间件
@@ -16,6 +17,7 @@ return [
     // 路由中间件
     'route' => [
         'auth' => AuthMiddleware::class,
-        'json' => JsonMiddleware::class
+        'json' => JsonMiddleware::class,
+        'token' => TokenMiddleware::class
     ],
 ];

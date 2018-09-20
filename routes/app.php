@@ -156,15 +156,43 @@ Route::get('/banners', 'App\Controller\IptvController@getBanner');
 // 获取分类
 Route::get('/types', 'App\Controller\IptvController@getType');
 
-//点播节目
+//点播节目分页列表
 Route::get('/vods', 'App\Controller\IptvController@getVods');
 
-Route::get('/vod-links', 'App\Controller\IptvController@vods');
+// 节目详细信息
+Route::get('/vods/{id}', 'App\Controller\IptvController@getVod');
 
-Route::get('/recommends', 'App\Controller\IptvController@vods');
+// 链接
+Route::get('/vod-links', 'App\Controller\IptvController@getVodLinks');
 
-Route::get('/vods/home', 'App\Controller\IptvController@vods');
+// 推荐
+Route::get('/recommend/{id}', 'App\Controller\IptvController@getRecommends');
 
-Route::get('/vods/condition', 'App\Controller\IptvController@vods');
+// 首页
+Route::get('/vods/home', 'App\Controller\IptvController@vodHome');
 
+// 条件
+Route::get('/vods/condition', 'App\Controller\IptvController@getCondition');
+
+// 会员价格表
+Route::get('/order/price', 'App\Controller\MemberController@getPrice');
+
+// token中间件
+Route::group(['middleware' => 'token'], function() {
+
+    // 取真实地址
+    Route::get('/vod-links/{id}', 'App\Controller\IptvController@getLink');
+
+    // 单片源下单
+    Route::post('/order/buy', 'App\Controller\IptvController@charge');
+
+    // 会员升级下单
+    Route::post('/member/buy', 'App\Controller\MemberController@charge');
+
+    // 查看我的订单
+    Route::post('/member/order', 'App\Controller\MemberController@order');
+
+});
+
+// apk 升级
 Route::get('/apk/upgrade', 'App\Controller\IptvController@vods');
