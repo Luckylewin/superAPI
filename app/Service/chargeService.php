@@ -96,15 +96,44 @@ class chargeService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_TO_PAY];
         }
 
-        // 判断订单是否有未支付的
-        /*Capsule::table('ott_order')
-                    ->where([
-                        ['uid' , '=', $this->uid],
-                        ['genre', '=', $genre['list_name']]
-                    ])
-                    ->get();*/
-
         $goods = $this->_getGoodsInfo($genre, $type);
+
+        // 判断订单是否有未支付的
+        $unpaidOrder = Capsule::table('ott_order AS a')
+                        ->select(['a.uid', 'a.genre', 'a.order_num','a.access_key','b.order_money', 'b.order_ispay', 'order_info'])
+                        ->where([
+                            ['uid' , '=', $this->uid],
+                            ['genre', '=', $genre['list_name']]
+                        ])
+                        ->leftJoin('iptv_order AS b', 'a.order_num', '=', 'b.order_sign')
+                        ->where([
+                            ['order_ispay','=', 0],
+                            ['order_addtime', '>=', time() - 1800],
+                            ['expire_time', '=', $goods['time']]
+                        ])
+                        ->first();
+
+        if (!empty($unpaidOrder)) {
+
+            Capsule::table('iptv_order')
+                              ->where('order_sign', '=', $unpaidOrder->order_num)
+                              ->update([
+                                 'order_addtime' => time()
+                              ]);
+
+            return [
+                'status' => true,
+                'data' => [
+                    'order_sign' => $unpaidOrder->order_num,
+                    'order_money' => $unpaidOrder->order_money,
+                    'order_uid' => $this->uid,
+                    'order_info' => $unpaidOrder->order_info,
+                    'access_key' => $unpaidOrder->access_key,
+                    'expire' => time() + 1800
+                ]
+            ];
+        }
+
         $order_sign = $this->_generateOrder();  //产生一个订单号
 
         // 订单流水表
