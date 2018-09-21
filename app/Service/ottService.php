@@ -519,16 +519,7 @@ class ottService extends common
 
         if (!empty($probation)) {
             if ($probation->expire_time > time()) {
-                Capsule::table('ott_access')
-                    ->insert([
-                        'mac' => $this->uid,
-                        'genre' => $genre->list_name,
-                        'is_valid' => 1,
-                        'expire_time' =>  $probation->expire_time,
-                        'deny_msg' => 'normal usage'
-                    ]);
                 return ['status' => true, 'msg' => 'ok'];
-
             } else {
                 Capsule::table('ott_access')
                     ->insert([
