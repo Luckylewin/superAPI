@@ -295,7 +295,7 @@ HTML;
         if (is_null($order)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
-        
+
         return ['status' => true, 'data' => ArrayHelper::toArray($order)];
     }
 
@@ -337,38 +337,13 @@ HTML;
             return false;
         }
 
-        $access = Capsule::table('ott_access')
-                            ->where([
-                                ['mac', '=', $ott_order->uid],
-                                ['genre', '=', $ott_order->genre],
-                            ])
-                            ->first();
-
-        if (!empty($access)) {
-            $baseTime =  $access->expire_time > time() ? $access->expire_time : time();
-            $expire_time = $baseTime + $ott_order->expire_time;
-
-            //更新用户的过期时间
-            Capsule::table('ott_access')
-                ->where([
-                    ['genre', '=', $ott_order->genre],
-                    ['mac', '=', $ott_order->uid]
-                ])
-                ->update([
-                    'is_valid' => 1,
-                    'expire_time' => $expire_time,
-                    'deny_msg' => 'normal usage',
-                    'access_key' => $ott_order->access_key
-                ]);
-        } else {
-            Capsule::table('ott_access')
-                ->insert([
-                    'is_valid' => 1,
-                    'expire_time' => time() + $ott_order->expire_time,
-                    'deny_msg' => 'normal usage',
-                    'access_key' => $ott_order->access_key
-                ]);
-        }
+        Capsule::table('ott_access')
+                    ->insert([
+                        'is_valid' => 1,
+                        'expire_time' => time() + $ott_order->expire_time,
+                        'deny_msg' => 'normal usage',
+                        'access_key' => $ott_order->access_key
+                    ]);
 
         return true;
     }

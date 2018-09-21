@@ -488,7 +488,8 @@ class ottService extends common
                 ->select(['is_valid','expire_time', 'deny_msg', 'access_key'])
                 ->where([
                     ['mac', '=',  $this->uid],
-                    ['genre', '=',  $genre->list_name]
+                    ['genre', '=',  $genre->list_name],
+                    ['access_key', '=', $access_key]
                 ])
                 ->first();
 
@@ -521,15 +522,6 @@ class ottService extends common
             if ($probation->expire_time > time()) {
                 return ['status' => true, 'msg' => 'ok'];
             } else {
-                Capsule::table('ott_access')
-                    ->insert([
-                        'mac' => $this->uid,
-                        'genre' => $genre->list_name,
-                        'is_valid' => 0,
-                        'expire_time' =>  $probation->expire_time,
-                        'deny_msg' => 'expire of probation'
-                    ]);
-
                 $this->stdout("分类过期", 'ERROR');
                 return ['status' => false, 'msg' => "试用过期"];
             }
@@ -552,14 +544,6 @@ class ottService extends common
                     'updated_at' => time()
                 ]);
 
-            Capsule::table('ott_access')
-                ->insert([
-                    'mac' => $this->uid,
-                    'genre' => $genre->list_name,
-                    'is_valid' => 1,
-                    'expire_time' =>  $expireTime,
-                    'deny_msg' => 'normal usage'
-                ]);
             Capsule::commit();
 
             return ['status' => true, 'msg' => 'ok'];
@@ -593,6 +577,7 @@ class ottService extends common
                     ->where([
                         ['mac', '=',  $this->uid],
                         ['genre', '=', $class],
+                        ['access_key', '=', $access_key]
                     ])
                     ->update([
                         'is_valid' => 0,
@@ -1269,10 +1254,13 @@ class ottService extends common
     {
         try {
             $genre = $this->post('genre');
+            $access_key = $this->post('access_key', '');
         } catch (\Exception $e) {
             $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
         }
+
+
 
         $mainClass = Capsule::table('ott_main_class')
                             ->where([
@@ -1290,11 +1278,31 @@ class ottService extends common
 
         $mainClass = ArrayHelper::toArray($mainClass);
 
+        if (empty($access_key)) {
+            $probation = Capsule::table('ott_genre_probation')
+                            ->where([
+                                ['mac', '=', $this->uid],
+                                ['genre', '=', $genre]
+                            ])
+                            ->first();
+
+            if (is_null($probation)) {
+                $mainClass['state'] = 'access deny';
+                $mainClass['expire_time'] = '';
+            } else {
+                $mainClass['state'] = 'probation expired';
+                $mainClass['expire_time'] = $probation->expire_time;
+            }
+
+            return ['status' => true, 'data' => $mainClass];
+        }
+
         // 查询
         $usage = Capsule::table('ott_access')
                               ->where([
                                   [ 'mac', '=', $this->uid],
-                                  ['genre', '=', $genre]
+                                  ['genre', '=', $genre],
+                                  ['access_key', '=', $access_key]
                               ])
                               ->first();
 
