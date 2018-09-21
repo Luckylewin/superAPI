@@ -68,4 +68,14 @@ class PayController extends BaseController
         Response::format(Response::TEXT);
         return (new payService($request))->paypalNotify($request, false);
     }
+
+    public function getOrderStatus()
+    {
+        $data = (new payService($this->request))->getOrderInfo();
+        if ($data['status'] === false) {
+            return Formatter::response($data['code']);
+        }
+
+        return Formatter::success($data['data']);
+    }
 }

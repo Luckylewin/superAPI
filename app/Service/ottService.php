@@ -482,20 +482,24 @@ class ottService extends common
      */
     protected function genreCharged($genre, $access_key)
     {
-        // 判断查询Access_key 判断权限表
-        $genreAccess = Capsule::table('ott_access')
-            ->select(['is_valid','expire_time', 'deny_msg', 'access_key'])
-            ->where([
-                ['mac', '=',  $this->uid],
-                ['genre', '=',  $genre->list_name]
-            ])
-            ->first();
+        if ($access_key) {
+            // 判断查询Access_key 判断权限表
+            $genreAccess = Capsule::table('ott_access')
+                ->select(['is_valid','expire_time', 'deny_msg', 'access_key'])
+                ->where([
+                    ['mac', '=',  $this->uid],
+                    ['genre', '=',  $genre->list_name]
+                ])
+                ->first();
 
-        if (is_null($genreAccess)) {
-            return $this->judgeWhenAccessKeyNotExist($genre);
-        } else {
-            return $this->judgeWhenAccessKeyExist($genreAccess, $genre->list_name, $access_key);
+            if (is_null($genreAccess)) {
+                return $this->judgeWhenAccessKeyNotExist($genre);
+            } else {
+                return $this->judgeWhenAccessKeyExist($genreAccess, $genre->list_name, $access_key);
+            }
         }
+
+        return $this->judgeWhenAccessKeyNotExist($genre);
     }
 
     /**

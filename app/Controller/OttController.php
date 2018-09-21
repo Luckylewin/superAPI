@@ -9,6 +9,7 @@
 namespace App\Controller;
 
 use App\Components\http\Formatter;
+use App\Components\pay\DokyPay;
 use App\Service\appService;
 use App\Service\authService;
 use App\Service\firmwareService;
@@ -16,7 +17,6 @@ use App\Service\iptvService;
 use App\Service\ottService;
 use App\Service\chargeService;
 use App\Service\userService;
-use App\Service\payService;
 use Breeze\Http\Request;
 use Breeze\Http\Response;
 
@@ -315,15 +315,7 @@ class OttController extends BaseController
         return Formatter::success($data['data']);
     }
 
-    public function getOrderStatus()
-    {
-        $data = (new payService($this->request))->getOrderInfo();
-        if ($data['status'] === false) {
-            return Formatter::response($data['code']);
-        }
 
-        return Formatter::success($data['data']);
-    }
 
     public function getBootPic()
     {
@@ -443,6 +435,15 @@ class OttController extends BaseController
         }
 
         return Formatter::success($data['data']);
+    }
+
+    public function test()
+    {
+        try {
+            (new DokyPay())->queryOrder('201809071336533230015062');
+        } catch (\Exception $e) {
+
+        }
     }
 
 }

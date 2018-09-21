@@ -187,7 +187,9 @@ class payService extends common
                     $order = ArrayHelper::toArray($order);
 
                     if ($order['order_status'] == '0' || $order['order_ispay'] == 0) {
-                        $this->updateOrder($order_num);
+                        $this->updateOrder($order_num, [
+                            'transNo' => $data['transNo']
+                        ]);
                         $this->callBack($order, $order_num, 'dokypay');
 
                         return $this->sendResult(ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS, $async);
@@ -214,16 +216,24 @@ class payService extends common
             ->first();
     }
 
-    private function updateOrder($order_num)
+    private function updateOrder($order_num, $data = [])
     {
+        $updateData = [
+            'order_ispay' => 1,
+            'order_status' => 1,
+            'order_paytime' => time(),
+            'order_confirmtime' => time()
+        ];
+
+        if (!empty($data)) {
+            $data = array_merge($updateData, $data);
+        } else {
+            $data = $updateData;
+        }
+
         Capsule::table('iptv_order')
-            ->where('order_sign', '=', $order_num)
-            ->update([
-                'order_ispay' => 1,
-                'order_status' => 1,
-                'order_paytime' => time(),
-                'order_confirmtime' => time()
-            ]);
+                    ->where('order_sign', '=', $order_num)
+                    ->update($data);
     }
 
     public function sendResult($code, $async)
@@ -232,7 +242,7 @@ class payService extends common
         $status = $code == ErrorCode::$RES_SUCCESS_PAYMENT_SUCCESS ? 'success' : 'warn';
 
         if ($async) {
-            return ['result' => $msg];
+            return 'success';
         } else {
             return $this->callbackPage($status, $msg);
         }
@@ -285,7 +295,7 @@ HTML;
         if (is_null($order)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
-
+        
         return ['status' => true, 'data' => ArrayHelper::toArray($order)];
     }
 
