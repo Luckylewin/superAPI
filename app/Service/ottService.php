@@ -1429,34 +1429,16 @@ class ottService extends common
 
             $access_key = md5($cardSecret . $this->uid);
 
-            if (!empty($access)) {
-                $baseTime =  $access->expire_time > time() ? $access->expire_time : time();
-                $expire_time = $baseTime +  $addTime ;
-
-                //更新用户的过期时间
-                Capsule::table('ott_access')
-                    ->where([
-                        ['genre', '=', $genre],
-                        ['mac', '=', $this->uid]
-                    ])
-                    ->update([
-                        'is_valid' => 1,
-                        'expire_time' => $expire_time,
-                        'deny_msg' => 'normal usage',
-                        'access_key' => $access_key
-                    ]);
-            } else {
-                $expire_time = time() +  $addTime;
-                Capsule::table('ott_access')
-                    ->insert([
-                        'mac' => $this->uid,
-                        'genre' => $genre,
-                        'is_valid' => 1,
-                        'expire_time' =>  $expire_time,
-                        'deny_msg' => 'normal usage',
-                        'access_key' => $access_key
-                    ]);
-            }
+            $expire_time = time() +  $addTime;
+            Capsule::table('ott_access')
+                ->insert([
+                    'mac' => $this->uid,
+                    'genre' => $genre,
+                    'is_valid' => 1,
+                    'expire_time' =>  $expire_time,
+                    'deny_msg' => 'normal usage',
+                    'access_key' => $access_key
+                ]);
 
             Capsule::table('sys_renewal_card')
                 ->where('card_num', '=', $card->card_num)
