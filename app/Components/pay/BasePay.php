@@ -9,9 +9,10 @@
 namespace App\Components\pay;
 
 
+use GuzzleHttp\Client;
+
 class BasePay extends Pay
 {
-
     public function setAppId($appID)
     {
         $this->app_id = $appID;
@@ -72,12 +73,34 @@ class BasePay extends Pay
         $this->cancelUrl = $cancelUrl;
     }
 
+    /**
+     * @param mixed $options
+     */
+    public function setGuzzleOptions($options)
+    {
+        $this->guzzleOptions = $options;
+    }
+
+    /**
+     * @return Client
+     */
+    public function getHttpClient()
+    {
+        return new Client($this->guzzleOptions);
+    }
+
+
     public function unifiedOrder()
     {
         // TODO: Implement unifiedOrder() method.
     }
 
     public function init()
+    {
+        // TODO: Implement init() method.
+    }
+
+    public function queryOrder($orderNum)
     {
         // TODO: Implement init() method.
     }

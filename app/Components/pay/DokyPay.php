@@ -9,15 +9,20 @@
 namespace App\Components\pay;
 
 use App\Components\Log;
+use App\Exceptions\ErrorCode;
 use Breeze\Config;
 use Breeze\Helpers\Url;
 
 class DokyPay extends BasePay
 {
     private $url = 'https://gateway.dokypay.com/clientapi/unifiedorder';
+    private $queryUrl = 'https://openapi.dokypay.com/trade/query';
     private $version = '1.0';
     private $prodName = 'southeast.asia';
     private $country = 'CN';
+
+    private $merchant_id;
+    private $merchant_key;
 
     public static $errorLog = APP_ROOT . 'storage/logs/dokypay-error.log';
     public static $notifyLog = APP_ROOT . 'storage/logs/dokypay-notify.log';
@@ -35,6 +40,8 @@ class DokyPay extends BasePay
         $config = Config::get('params.DOKYPAY');
         $this->setAppId($config['APP_ID']);
         $this->setAppSecret($config['APP_KEY']);
+        $this->setMerchantId($config['MERCHANT_ID']);
+        $this->setMerchantKey($config['MERCHANT_KEY']);
         $this->setNotifyUrl(Url::to('notify/dokypay'));
         $this->setReturnUrl(Url::to('return/dokypay'));
     }
@@ -63,7 +70,7 @@ class DokyPay extends BasePay
             }
         }
 
-        $goods['sign'] = $this->setSign($goods);
+        $goods['sign'] = $this->setSign($goods, $this->app_key);
         ksort($goods);
 
         $logFile = APP_ROOT . 'storage/logs/dokypay.log';
@@ -76,34 +83,75 @@ class DokyPay extends BasePay
         }
 
         throw new \Exception("统一下单接口调用失败");
-
     }
 
-    private function  post($url, $data)
+    /**
+     * 查询订单
+     * @param $merTransNo
+     * @return array
+     */
+    public function queryOrder($merTransNo)
     {
-        $ch = curl_init();
-        $timeout = 5;
+        $data = [
+            //'version' => $this->version,
+            'merchantId' => $this->merchant_id,
+            'tradeNo' => $merTransNo
+        ];
+        $data['sign'] = $this->setSign($data, $this->merchant_key);
 
-        $header = array(
-            'Accept-Language: zh-cn',
-            'Connection: Keep-Alive',
-            'Cache-Control: no-cache',
-            'Content-Type: Application/json;charset=utf-8',
-            "X-Requested-With: XMLHttpRequest"
-        );
+        ksort($data);
+        print_r($data);
+        $response = $this->post($this->queryUrl, $data);
+        if ($response == false) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST];
+        }
 
-        $json = json_encode($data);
+        $responseData = $response['data'];
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
-        $res = curl_exec($ch);
+        if (isset($responseData['resultCode']) && $responseData['resultCode'] == '3004') {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_ORDER_DOES_NOT_EXIST];
+        }
 
-        return json_decode($res, true);
+        return $responseData;
+    }
 
+    private function checkIsFinish($data)
+    {
+        if (empty($data) || !isset($data['tradeStatus'])) {
+            return false;
+        }
+
+        $tradeStatus = $data['tradeStatus'];
+        if ($tradeStatus == 'success') {
+            return ['status' => true, 'msg' => $tradeStatus];
+        }
+
+        return ['status' => false, 'msg' => $tradeStatus];
+    }
+
+    private function post($url, $data)
+    {
+        $client = $this->getHttpClient();
+        $this->setGuzzleOptions([
+            'headers' => [
+                    'Content-Type: Application/json;charset=utf-8',
+                    'Accept: text/html'
+            ]
+        ]);
+
+        try {
+            $result = $client->request('POST', $url,['json' => $data])
+                            ->getBody()
+                            ->getContents();
+
+            return json_decode($result, true);
+        } catch (\GuzzleHttp\Exception\GuzzleException $e) {
+            echo $e->getMessage();
+            return false;
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+            return false;
+        }
     }
 
     /**
@@ -117,18 +165,37 @@ class DokyPay extends BasePay
     /**
      * 生成签名
      * @param $data
+     * @param $secret
      * @return string
      */
-    public function setSign($data)
+    public function setSign($data, $secret)
     {
         ksort($data);
         $str = '';
         foreach ($data as $key => $val) {
             $str .= ($key . '=' . $val . '&');
         }
-        $str .= ('key=' . $this->app_key);
+        $str .= ('key=' . $secret);
 
         return bin2hex(hash("sha256", $str, true));
+    }
+
+    /**
+     * 设置商户密钥
+     * @param $merchant_id
+     */
+    public function setMerchantId($merchant_id)
+    {
+        $this->merchant_id = $merchant_id;
+    }
+
+    /**
+     * 设置商户密钥
+     * @param $key
+     */
+    public function setMerchantKey($key)
+    {
+        $this->merchant_key = $key;
     }
 
     /**
@@ -139,7 +206,7 @@ class DokyPay extends BasePay
      */
     public function checkSign($data, $sign)
     {
-        $encrypt = $this->setSign($data);
+        $encrypt = $this->setSign($data, $this->app_key);
 
         if ($encrypt != $sign) {
             return false;

@@ -18,7 +18,7 @@ return [
     'NGINX' => [
         'MEDIA_PORT' => '',
         'MEDIA_IP' => '',
-        'DEFAULT_EXPIRE' => '',
+        'DEFAULT_EXPIRE' => '3600',
         'DEFAULT_SECRET' => '',
     ],
 
@@ -27,7 +27,9 @@ return [
      */
     'DOKYPAY' => [
         'APP_ID' => '',
-        'APP_KEY' => ''
+        'APP_KEY' => '',
+        'MERCHANT_ID' => '',
+        'MERCHANT_KEY' => ''
     ],
 
     /*

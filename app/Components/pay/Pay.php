@@ -70,4 +70,9 @@ abstract class Pay implements PayInterface
      * @var string 取消支付返回URL
      */
     protected $cancelUrl;
+
+    /**
+     * @var array $guzzleOptions
+     */
+    protected $guzzleOptions = [];
 }
