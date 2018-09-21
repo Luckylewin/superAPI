@@ -25,11 +25,12 @@ $http_worker->onMessage = function(TcpConnection $connection, $data)
     App::run($connection);
 };
 
-
 // 根目录
 define('APP_ROOT', dirname(dirname(__FILE__)) . '/');
 // 日志目录
 define('LOG_PATH', dirname(dirname(__FILE__)) . '/storage/logs/');
+// 环境参数
+define('ENV', 'prod');
 // 调试开关
 define('DEBUG', true);
 

@@ -56,7 +56,7 @@ class Log
 
     public static function stdout($str)
     {
-        if (DEBUG) {
+        if (ENV == 'dev') {
             echo $str , PHP_EOL;
         }
     }

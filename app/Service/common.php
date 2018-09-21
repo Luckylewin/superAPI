@@ -168,7 +168,7 @@ class common
     // 控制台输出
     public function stdout($str, $status)
     {
-        if (DEBUG) {
+        if (ENV == 'dev') {
             echo Func::color($str, $status) . PHP_EOL;
         }
     }
