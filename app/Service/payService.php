@@ -340,6 +340,8 @@ HTML;
         Capsule::table('ott_access')
                     ->insert([
                         'is_valid' => 1,
+                        'genre' => $ott_order->genre,
+                        'mac' => $ott_order->uid,
                         'expire_time' => time() + $ott_order->expire_time,
                         'deny_msg' => 'normal usage',
                         'access_key' => $ott_order->access_key
