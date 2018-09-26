@@ -35,6 +35,10 @@ class Log
                 $log = (array) $request->get();
             }
 
+            if (!isset($log['header'])) {
+                $log['header'] = ltrim(strstr($request->server('REQUEST_URI'), '?', true), '/');
+            }
+
             $log = json_encode($log);
         }
 
