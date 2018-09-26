@@ -159,10 +159,10 @@ class appService extends common
 
         $ver = str_replace('_', '.', $ver);
 
-        $lastApp = $this->getLastApp($type);
-        $max_ver = $lastApp['ver'];
+        $newestApp = $this->getLastApp($type);
+        $max_ver = $newestApp['ver'];
 
-        if ($lastApp == false) {
+        if ($newestApp == false) {
             $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
@@ -172,22 +172,22 @@ class appService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
         }
 
-        if (isset($lastApp['type']) && $lastApp['type']==1) {
-            $oss = new MyOSS();
-            if (strpos($lastApp['url'], '/') === false && $oss->is_exist($lastApp['url'])) {
-                $lastApp['url'] = $oss->getSignUrl($lastApp['url'], 1000);
+        if (isset($newestApp['type']) && $newestApp['type']==1) {
+            if ($newestApp['save_position'] == 'oss') {
+                $oss = new MyOSS();
+                $newestApp['url'] = $oss->getSignUrl($newestApp['url'], 1000);
             } else {
-                $lastApp['url'] = Func::getAccessUrl($this->uid, $lastApp['url'], 1000);
+                $newestApp['url'] = Func::getAccessUrl($this->uid, $newestApp['url'], 1000);
             }
         }
 
-        $lastApp['type'] = $lastApp['typeName'];
+        $newestApp['type'] = $newestApp['typeName'];
 
-        unset($lastApp['typeName']);
-        unset($lastApp['ID']);
-        unset($lastApp['apk_ID']);
+        unset($newestApp['typeName']);
+        unset($newestApp['ID']);
+        unset($newestApp['apk_ID']);
 
-        return ['status' => true, 'data' => $lastApp];
+        return ['status' => true, 'data' => $newestApp];
     }
 
     public function judgeIsNeedUpdate($client,$server)
@@ -215,7 +215,7 @@ class appService extends common
 
         if ($apk_list) {
             $apk_detail = Capsule::table('apk_detail')
-                                ->select(['url', 'content', 'md5', 'ver', 'force_update','type'])
+                                ->select(['url', 'content', 'md5', 'ver', 'force_update','type','save_position'])
                                 ->where('apk_ID', '=' , $apk_list->ID)
                                 ->orderBy('ID', 'DESC')
                                 ->first();
