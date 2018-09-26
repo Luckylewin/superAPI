@@ -73,7 +73,7 @@ class Paypal extends BasePay
                 throw new \Exception("$field 参数未设置");
             }
         }
-
+        
         //创建paypal对象
         $apiContext = $this->init();
 
@@ -191,7 +191,7 @@ class Paypal extends BasePay
 
             return ['status' => true, 'order_num' => $invoice_number];
         } catch(\Exception $e){
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_ORDER_HAS_BEEN_PROCESSED];
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PAYMENT_FAILED];
         }
     }
 }
