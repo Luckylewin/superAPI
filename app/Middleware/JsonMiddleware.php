@@ -38,8 +38,9 @@ class JsonMiddleware implements MiddlewareInterface
                 return Formatter::response(ErrorCode::$RES_ERROR_HEADER_OR_UID_NOT_SET);
             };
         }
-
-        if ($request->server()->HTTP_CONTENT_TYPE != 'application/json') {
+        	
+	$server = $request->server();
+	if (isset($request->HTTP_CONTENT_TYPE) && $request->HTTP_CONTENT_TYPE != 'application/json' || !empty($rawData)) {
             $request->setPost($result);
             $request->setRequest($result);
         }

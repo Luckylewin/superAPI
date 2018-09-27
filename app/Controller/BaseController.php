@@ -25,7 +25,7 @@ class BaseController extends Controller
     public function __construct(Request $request)
     {
         // 兼容非标准json post数据
-        if (isset($request->server()->HTTP_CONTENT_TYPE) && $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
+        if (!isset($request->server()->HTTP_CONTENT_TYPE) || $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
             $post = json_decode($request->rawData()->scalar, true);
             $request->setPost($post);
             $request->setRequest($post);
