@@ -131,7 +131,12 @@ class appService extends common
 
         $object = $app->url;
         $ver = $app->ver;
-        $url = Func::getAccessUrl($this->uid, $object, 86400);
+        if ($app->save_path == 'oss') {
+            $oss = new MyOSS();
+            $url= $oss->getSignUrl($object, 1000);
+        } else {
+            $url = Func::getAccessUrl($this->uid, $object, 86400);
+        }
         
         return [
             'status' => true,
