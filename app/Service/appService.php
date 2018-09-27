@@ -82,13 +82,13 @@ class appService extends common
 
         $data = ArrayHelper::toArray($data);
         $oss = new MyOSS();
-        
+
         foreach ($data as $k => $app) {
             if (!empty($app['img']) && !preg_match('/^http/',$app['img'])) {
                 $data[$k]['img'] = Func::getAccessUrl($this->uid, $app['img'], 86400);
             }
             if (!empty($app['url'])) {
-                if ($app['save_path'] == 'oss') {
+                if ($app['save_position'] == 'oss') {
                     $data[$k]['url'] = $oss->getSignUrl($app['url'], 1000);
                 } else {
                     $data[$k]['url'] = Func::getAccessUrl($this->uid, $app['url'], 86400);
@@ -137,7 +137,7 @@ class appService extends common
 
         $object = $app->url;
         $ver = $app->ver;
-        if ($app->save_path == 'oss') {
+        if ($app->save_position == 'oss') {
             $oss = new MyOSS();
             $url= $oss->getSignUrl($object, 1000);
         } else {
