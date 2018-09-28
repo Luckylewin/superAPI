@@ -407,6 +407,7 @@ class iptvService extends common
              $name = $this->post('name', '');
              $lang = $this->post('lang', '');
              $tags = $this->post('tags', '');
+             $page = $this->post('page', '1');
              $sort = $this->post('sort', 'update_time:asc');
          } catch (\Exception $e) {
              return ['status' => false, 'code' => $e->getCode()];
@@ -458,7 +459,7 @@ class iptvService extends common
          $totalPage = self::getTotalPage($perPage, $totalItems);
 
          //计算offset
-         $page = isset($data['page']) && $this->data['page'] <= $totalPage? $this->data['page'] : '1';
+
          $offset = ($page - 1) * $perPage;
 
 
