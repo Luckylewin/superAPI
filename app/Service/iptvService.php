@@ -488,60 +488,42 @@ class iptvService extends common
     /**
      * 取卡拉ok
      * @return array
-     * @throws \Exception
      */
     public function getKaraoke()
     {
-        $url = $this->post('url', null, ['string']);
-
-        // 查询服务器
-        $data = Capsule::table('sys_karaoke')
-                        ->where("url", "=", $url)
-                        ->first();
-
-        if ($data->source == 'upload') {
-            $url = Func::getAccessUrl($this->uid, $url, 86400);
-
-            $karaoke['hd720'] = null;
-            $karaoke['medium'] = $url;
-            $karaoke['small'] = null;
-            return $karaoke;
+        try {
+            $url = $this->post('url', null, ['string']);
+        } catch (\Exception $e) {
+            return ['status' => false, 'code'=>ErrorCode::$RES_ERROR_PARAMETER_MISSING];
         }
 
-        $Snnopy = new Snoopy();
-        $Snnopy->scheme = 'https';
-        $Snnopy->_fp_timeout = 15;
-        $Snnopy->fetch('https://www.youtube.com/get_video_info?video_id='.$url);
-        $videoInfo = $Snnopy->results;
+        $cacheKey = "karaoke-{$url}";
+        $cacheDB = Redis::$REDIS_VOD_ALBUM;
+        $cacheData = $this->getDataFromCache($cacheKey, $cacheDB);
 
-        Capsule::table('sys_karaoke')
-                        ->where('url','=',$url)
-                        ->increment('hit_count',1);
-
-        if (empty($videoInfo)) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        if ($cacheData) {
+            return $cacheData;
         }
 
-        parse_str($videoInfo ,$info);
-
-        if (!isset($info['url_encoded_fmt_stream_map'])) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        $data = file_get_contents("http://148.72.168.63:10082/bak/youtube.php?id={$url}");
+        if ($data) {
+            $link = [
+                'hd720' => $data,
+                'medium' => $data,
+                'small' => $data
+            ];
+        } else {
+            $link = [
+                'hd720' => 'http://fakelink.cn',
+                'medium' => 'http://fakelink.cn',
+                'small' => 'http://fakelink.cn'
+            ];
         }
 
-        $streams = explode(',',$info['url_encoded_fmt_stream_map']);
-        $video = [];
+        $this->redis = $this->getRedis($cacheDB);
+        $this->redis->set("youtube-" . $url, json_encode($link));
 
-        foreach($streams as $stream) {
-            parse_str($stream, $real_stream);
-            $video[$real_stream['quality']] = $real_stream['url'];
-        }
-
-        if (empty($video)) {
-            $this->stdout("没有数据", "ERROR");
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-        }
-
-        return ['status' => true, 'data' => $video];
+        return ['status' => true, 'data' => $link];
     }
 
 
