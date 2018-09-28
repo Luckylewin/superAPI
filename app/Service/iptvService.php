@@ -408,6 +408,7 @@ class iptvService extends common
              $lang = $this->post('lang', '');
              $tags = $this->post('tags', '');
              $page = $this->post('page', '1');
+             $perPage = $this->post('perPage', 10);
              $sort = $this->post('sort', 'update_time:asc');
          } catch (\Exception $e) {
              return ['status' => false, 'code' => $e->getCode()];
@@ -453,7 +454,7 @@ class iptvService extends common
          }
 
          //每页的数量
-         $perPage = isset($data['perPage']) ? $this->data['perPage'] : 10;
+
 
          //计算总页
          $totalPage = self::getTotalPage($perPage, $totalItems);
