@@ -473,7 +473,7 @@ class iptvService extends common
          $cacheData['page'] = $page;
          $cacheData['perPage'] = $perPage;
          $cacheData['totalPage'] = $totalPage;
-         $cacheData['totalItems'] = $totalItems['total'];
+         $cacheData['totalItems'] = $totalItems;
          $cacheData['lang'] = 'Vietnamese,Chinese,English,Korean,French,Other';
          $cacheData['data'] = $data;
 
