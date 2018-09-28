@@ -25,6 +25,7 @@ class App
                 'password'  => $conf['password'],
                 'charset'   => $conf['charset'],
                 'collation' => $conf['collation'],
+                'port'      => $conf['port']
             ]
         );
 
