@@ -502,7 +502,7 @@ class iptvService extends common
         $cacheData = $this->getDataFromCache($cacheKey, $cacheDB);
 
         if ($cacheData) {
-            return $cacheData;
+            return ['status' => true, 'data' => $cacheData];
         }
 
         $data = file_get_contents("http://148.72.168.63:10082/bak/youtube.php?id={$url}");
