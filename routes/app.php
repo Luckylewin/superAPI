@@ -58,6 +58,8 @@ Route::group(['middleware' => 'json'], function() {
 // 卡拉ok列表
     Route::post('/getKaraokeList', 'App\Controller\OttController@getKaraokeList');
 
+    Route::post('/getKaraoke', 'App\Controller\OttController@getKaraoke');
+
 // 续费
     Route::post('/renew', 'App\Controller\OttController@renew');
 
@@ -131,7 +133,6 @@ Route::group(['middleware' => 'json'], function() {
 Route::get('/getip', 'App\Controller\UserController@getip');
 
 
-
 // 支付同步回调通知
 Route::get('/paypalCallback', 'App\Controller\PayController@paypalCallback');
 
@@ -196,3 +197,5 @@ Route::group(['middleware' => 'token'], function() {
 
 // apk 升级
 Route::get('/apk/upgrade', 'App\Controller\IptvController@vods');
+
+Route::get('/testregister', 'App\Controller\OttController@test');
