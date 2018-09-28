@@ -452,7 +452,7 @@ class iptvService extends common
          }
 
          //每页的数量
-         $perPage = isset($data['perPage']) ? $this->data['perPage'] : 6;
+         $perPage = isset($data['perPage']) ? $this->data['perPage'] : 10;
 
          //计算总页
          $totalPage = self::getTotalPage($perPage, $totalItems);
