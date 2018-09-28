@@ -521,7 +521,9 @@ class iptvService extends common
         }
 
         $this->redis = $this->getRedis($cacheDB);
-        $this->redis->set("youtube-" . $url, json_encode($link));
+
+        $this->redis->set($cacheKey, json_encode($link));
+        $this->redis->expire($cacheKey , 3600);
 
         return ['status' => true, 'data' => $link];
     }
