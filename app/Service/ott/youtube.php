@@ -25,9 +25,21 @@ class youtube extends ottbase
         }
 
         $url = "https://www.youtube.com/watch?v={$id}";
-        $data = exec("youtube-dl -g {$url}", $out, $status);
-        
-        return $out;
+        $url = escapeshellarg($url);
+
+        $string = "sudo youtube-dl -g {$url}";
+
+        $descriptorSpec = array(
+            0 => array("pipe", "r"),  // stdin
+            1 => array("pipe", "w"),  // stdout
+            2 => array("pipe", "w"),  // stderr
+        );
+        $process = proc_open($string, $descriptorSpec, $pipes);
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        proc_close($process);
+
+        return $stdout;
     }
 
 
