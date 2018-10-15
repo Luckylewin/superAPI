@@ -26,11 +26,14 @@ class youtube extends ottbase
 
         $url = "https://www.youtube.com/watch?v={$id}";
         $url = escapeshellarg($url);
-        
+
         $string = "youtube-dl -g {$url}";
         exec($string, $out, $status);
-
-        return $out;
+        if ($status) {
+            var_dump($out);
+            return $out;
+        }
+        return false;
     }
 
 
