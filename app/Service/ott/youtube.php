@@ -29,10 +29,10 @@ class youtube extends ottbase
 
         $string = "youtube-dl -g {$url}";
         exec($string, $out, $status);
-        if ($status) {
-            var_dump($out);
-            return $out;
+        if ($status == 0 && isset($out[0])) {
+            return $out[0];
         }
+
         return false;
     }
 
