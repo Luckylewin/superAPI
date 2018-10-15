@@ -17,9 +17,9 @@ use Workerman\Protocols\Http;
 
 class PlayController extends BaseController
 {
-    public $functions = array('tvnet','viettel','sohatv', 'thvl', 'hoabinhtv', 'v4live', 'migu','sohulive','hplus','newmigu','haoqu','tencent','vtv','ott','local','Youtube');
+    public $functions = array('tvnet','viettel','sohatv', 'thvl', 'hoabinhtv', 'v4live', 'migu','sohulive','hplus','newmigu','haoqu','tencent','vtv','ott','local','youtube');
     public $check_switch = false;
-    
+
     public function index()
     {
         if (isset($this->request->get()->getip)) {
