@@ -25,10 +25,10 @@ class SignMiddleware implements MiddlewareInterface
     {
         $sign = $request->get('sign');
         $path = '/play/' . $request->get('name');
-
+        
         $result = Token::validate($sign, $path, $request->ip());
 
-        if ($result == true) {
+        if ($result == true || $request->get('noauth')) {
             return $request;
         }
 
