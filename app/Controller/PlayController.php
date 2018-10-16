@@ -20,6 +20,27 @@ class PlayController extends BaseController
     public $functions = array('tvnet','viettel','sohatv', 'thvl', 'hoabinhtv', 'v4live', 'migu','sohulive','hplus','newmigu','haoqu','tencent','vtv','ott','local','youtube');
     public $check_switch = false;
 
+    /**
+     * 取视频的各种清晰度的 带音频的播放地址列表
+     * @return string
+     */
+    public function playlist()
+    {
+        $play = isset($this->request->get()->resolve) ? $this->request->get()->resolve : '';
+        if (empty($play)) {
+            return '';
+        }
+
+        $data = ArrayHelper::toArray($this->request->get());
+        $uid = isset($this->request->get()->uid) ? $this->request->get()->uid : '';
+     
+        return $playList = self::$play($uid,  $data);
+    }
+
+    /**
+     * 取视频直接播放地址 然后重定向到真正的播放地址
+     * @return string
+     */
     public function index()
     {
         if (isset($this->request->get()->getip)) {
@@ -36,46 +57,72 @@ class PlayController extends BaseController
             Http::header("location:{$url}");
         }
 
-        return '空空如也';
+        return '404';
     }
+
 
     public function __call($name, $arguments)
     {
         $uid = $arguments[0];
         $data = $arguments[1];
-        return $this->ott($uid,$data);
+
+        if (isset($data['resolve'])) {
+            return $this->resolve($uid, $data);
+        } else {
+            return $this->play($uid,$data);
+        }
     }
 
     /**
-     * 校验单个源的有效性
+     * 取多种清晰度的播放地址
+     * @param $uid
      * @param $data
-     * @return bool
+     * @return bool|mixed|string
      */
-    public function validate($data)
+    public function resolve($uid, $data)
     {
-        if ($this->check_switch) {
-            $secret = "topthinker";
-            $expire = isset($data['e'])? $data['e'] : 0;
-            $uri = isset($data['name'])? $data['name'] : 0;
-            $url_md5 = isset($data['md5'])?$data['md5'] : '';
-            $md5 = md5(md5($expire.$uri).$secret);
-            if ($md5 != $url_md5) {
-                echo "md5校验不通过\n";
-                return false;
+        $redis  = Redis::singleton();
+        $redis->select(Redis::$REDIS_OTT_URL);
+        $resolveClassName = isset($data['resolve'])? $data['resolve'] : $data['resolve'];
+        $resolveClass = $this->newObject($resolveClassName);
+
+        if (is_subclass_of($resolveClass,ottbase::class)) {
+            $key = $resolveClassName . '-playlist-';
+            $params = $resolveClass->getResolveKey();
+            foreach ($params as $_key) {
+                if (isset($data[$_key])) {
+                    $key .= ("-" . $data[$_key]);
+                }
             }
-            if ($expire < time()) {
-                echo "链接已经过期\n";
-                return false;
+
+            $playList = $redis->get($key);
+            if ($playList == false){
+                $playList = $resolveClass->getPlayList($data);
+                if (!empty($playList)) {
+                    $expireTime = $resolveClass->getExpiretime() ? $resolveClass->getExpiretime() : 3600;
+                    $redis->set($key, json_encode($playList));
+                    $redis->expire($key,$expireTime);
+                }
+            } else {
+                $playList = json_decode($playList, true);
+                if (empty($playList)) {
+                    return false;
+                }
             }
+
+            return $playList;
         }
-        return true;
+
+        //该类不存在 或者没有集成
+        return false;
     }
+
     /**
      * @param $uid
      * @param $data
      * @return bool|mixed|string
      */
-    public function ott($uid,$data)
+    public function play($uid,$data)
     {
         if (!$this->validate($data)) {
             return false;
@@ -127,5 +174,30 @@ class PlayController extends BaseController
         }catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * 校验单个源的有效性
+     * @param $data
+     * @return bool
+     */
+    protected function validate($data)
+    {
+        if ($this->check_switch) {
+            $secret = "topthinker";
+            $expire = isset($data['e'])? $data['e'] : 0;
+            $uri = isset($data['name'])? $data['name'] : 0;
+            $url_md5 = isset($data['md5'])?$data['md5'] : '';
+            $md5 = md5(md5($expire.$uri).$secret);
+            if ($md5 != $url_md5) {
+                echo "md5校验不通过\n";
+                return false;
+            }
+            if ($expire < time()) {
+                echo "链接已经过期\n";
+                return false;
+            }
+        }
+        return true;
     }
 }
