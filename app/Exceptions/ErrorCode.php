@@ -63,6 +63,7 @@ class ErrorCode
     public static $RES_SUCCESS_PAYMENT_SUCCESS = 46;
     public static $RES_ERROR_OVERTIME_PAYMENT  = 47;
     public static $RES_ERROR_INVALID_REQUEST  = 48;
+    public static $RES_ERROR_LINK_EXPIRED  = 49;
 
 
 
@@ -216,6 +217,9 @@ class ErrorCode
                 break;
             case self::$RES_ERROR_INVALID_REQUEST:
                 $error = 'Your request was made with invalid credentials.';
+                break;
+            case self::$RES_ERROR_LINK_EXPIRED:
+                $error = 'signature expired';
                 break;
             default:
                 $error = "other error";

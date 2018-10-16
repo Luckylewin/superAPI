@@ -25,7 +25,7 @@ abstract class ottbase
 
     public function setCurl()
     {
-        $this->curl = new MyCurl();
+        return $this->curl = new MyCurl();
     }
 
     public function getHttpClient()

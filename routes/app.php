@@ -148,6 +148,12 @@ Route::get('/index','App\Controller\IndexController@index' );
 // 点播播放
 Route::get('/', 'App\Controller\PlayController@index');
 
+// 点播播放(防盗链)
+Route::group(['middleware' => 'sign'], function() {
+    // 点播播放
+    Route::get('/play/{name}', 'App\Controller\PlayController@index');
+});
+
 // 点播获取 第三方平台播放地址列表
 Route::get('/playlist/{id}', 'App\Controller\PlayController@playlist');
 

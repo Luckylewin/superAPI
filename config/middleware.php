@@ -8,6 +8,7 @@
 use App\Middleware\AuthMiddleware;
 use App\Middleware\JsonMiddleware;
 use \App\Middleware\TokenMiddleware;
+use \App\Middleware\SignMiddleware;
 
 return [
      // 全局中间件
@@ -18,6 +19,7 @@ return [
     'route' => [
         'auth' => AuthMiddleware::class,
         'json' => JsonMiddleware::class,
-        'token' => TokenMiddleware::class
+        'token' => TokenMiddleware::class,
+        'sign' => SignMiddleware::class,
     ],
 ];

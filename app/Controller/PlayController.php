@@ -43,17 +43,29 @@ class PlayController extends BaseController
      * 取视频直接播放地址 然后重定向到真正的播放地址
      * @return string
      */
-    public function index()
+    public function index($name = '')
     {
+        $uid = isset($this->request->get()->uid) ? $this->request->get()->uid : '';
         if (isset($this->request->get()->getip)) {
             return $this->request->ip();
         }
-        $play = isset($this->request->get()->header) ? $this->request->get()->header : '';
-        if (empty($play)) {
-            return '';
-        }
+
         $data = ArrayHelper::toArray($this->request->get());
-        $uid = isset($this->request->get()->uid) ? $this->request->get()->uid : '';
+
+        // 不带鉴权模式
+        // http://192.168.0.11:12389?header=hplus&name=vtv1_hd&cdn=1
+        if (strpos($this->request->server('REQUEST_URI'), 'play') === false) {
+            $play = isset($this->request->get()->header) ? $this->request->get()->header : '';
+            if (empty($play)) {
+                return '';
+            }
+        } else {
+            // 带鉴权模式
+            // http://192.168.0.11:12389/play/vtv1?resolve=hplus&sign=b4e2a6e01539680519
+            $data['header'] = $this->request->get('resolve');
+            $data['name'] = $name;
+        }
+
         $url = $this->play($uid,$data);
 
         if ($url) {
@@ -113,10 +125,6 @@ class PlayController extends BaseController
      */
     public function play($uid,$data)
     {
-        if (!$this->validate($data)) {
-            return false;
-        }
-
         $redis  = Redis::singleton();
         $redis->select(Redis::$REDIS_OTT_URL);
         $c = isset($data['class'])? $data['class'] : $data['header'];
@@ -165,28 +173,5 @@ class PlayController extends BaseController
         }
     }
 
-    /**
-     * 校验单个源的有效性
-     * @param $data
-     * @return bool
-     */
-    protected function validate($data)
-    {
-        if ($this->check_switch) {
-            $secret = "topthinker";
-            $expire = isset($data['e'])? $data['e'] : 0;
-            $uri = isset($data['name'])? $data['name'] : 0;
-            $url_md5 = isset($data['md5'])?$data['md5'] : '';
-            $md5 = md5(md5($expire.$uri).$secret);
-            if ($md5 != $url_md5) {
-                echo "md5校验不通过\n";
-                return false;
-            }
-            if ($expire < time()) {
-                echo "链接已经过期\n";
-                return false;
-            }
-        }
-        return true;
-    }
+
 }
