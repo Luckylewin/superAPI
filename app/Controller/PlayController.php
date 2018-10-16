@@ -27,8 +27,8 @@ class PlayController extends BaseController
     {
         $sign = $this->request->get('sign');
         $path = '/playlist/' . $id;
-
-        $result = Token::validate($sign, $path);
+        echo Token::generate($path, $this->request->ip(), 1800);
+        $result = Token::validate($sign, $path, $this->request->ip());
         if ($result == false) {
             return ':(';
         }
