@@ -8,11 +8,10 @@
 
 namespace App\Controller;
 
-
 use App\Components\cache\Redis;
+use App\Components\encrypt\Token;
 use App\Components\helper\ArrayHelper;
 use App\Service\ott\ottbase;
-use Breeze\Route;
 use Workerman\Protocols\Http;
 
 class PlayController extends BaseController
@@ -24,17 +23,20 @@ class PlayController extends BaseController
      * 取视频的各种清晰度的 带音频的播放地址列表
      * @return string
      */
-    public function playlist()
+    public function playlist($id)
     {
-        $play = isset($this->request->get()->resolve) ? $this->request->get()->resolve : '';
-        if (empty($play)) {
-            return '';
+        $sign = $this->request->get('sign');
+        $path = '/playlist/' . $id;
+
+        $result = Token::validate($sign, $path);
+        if ($result == false) {
+            return ':(';
         }
 
         $data = ArrayHelper::toArray($this->request->get());
-        $uid = isset($this->request->get()->uid) ? $this->request->get()->uid : '';
-     
-        return $playList = self::$play($uid,  $data);
+        $data['name'] = $id;
+
+        return $playList = $this->resolve($data);
     }
 
     /**
@@ -52,38 +54,25 @@ class PlayController extends BaseController
         }
         $data = ArrayHelper::toArray($this->request->get());
         $uid = isset($this->request->get()->uid) ? $this->request->get()->uid : '';
-        $url = self::$play($uid,  $data);
+        $url = $this->play($uid,$data);
+
         if ($url) {
             Http::header("location:{$url}");
         }
 
-        return '404';
-    }
-
-
-    public function __call($name, $arguments)
-    {
-        $uid = $arguments[0];
-        $data = $arguments[1];
-
-        if (isset($data['resolve'])) {
-            return $this->resolve($uid, $data);
-        } else {
-            return $this->play($uid,$data);
-        }
+        return ':(';
     }
 
     /**
      * 取多种清晰度的播放地址
-     * @param $uid
      * @param $data
      * @return bool|mixed|string
      */
-    public function resolve($uid, $data)
+    public function resolve($data)
     {
         $redis  = Redis::singleton();
         $redis->select(Redis::$REDIS_OTT_URL);
-        $resolveClassName = isset($data['resolve'])? $data['resolve'] : $data['resolve'];
+        $resolveClassName = $this->request->get('resolve');
         $resolveClass = $this->newObject($resolveClassName);
 
         if (is_subclass_of($resolveClass,ottbase::class)) {

@@ -149,7 +149,7 @@ Route::get('/index','App\Controller\IndexController@index' );
 Route::get('/', 'App\Controller\PlayController@index');
 
 // 点播获取 第三方平台播放地址列表
-Route::get('/playlist', 'App\Controller\PlayController@playlist');
+Route::get('/playlist/{id}', 'App\Controller\PlayController@playlist');
 
 // 点播鉴权
 Route::post('/auth/token', 'App\Controller\IptvController@auth');
