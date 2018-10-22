@@ -73,9 +73,7 @@ class vtvgo extends ottbase
         $time = time();
         curl_setopt($ch,CURLOPT_COOKIE,"__cfduid=d6f408a3d72764ea1793fb1ab18c0d5b4{$time}; PHPSESSID=82c75b2gko39q262c6d7beae17;");
         $content = curl_exec($ch);
-        if ($this->debug) {
-            print_r(curl_getinfo($ch));
-        }
+
         if (curl_error($ch)) {
             echo "curl出错\n";
             var_dump(curl_error($ch));

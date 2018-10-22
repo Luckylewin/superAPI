@@ -82,6 +82,7 @@ class tencent extends ottbase
         $response = $client->get($url, $this->setHeader([
             'referer' => "http://info.zb.video.qq.com"
         ]));
+        $response = $response->getBody()->getContents();
 
         $data = str_replace("jsonp9","",$response);
         $data = trim($data,"(");

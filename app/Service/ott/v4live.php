@@ -31,7 +31,7 @@ class v4live extends ottbase
     	$source = $this->name[$index];
     	//var_dump($source);
     	
-    	$str=$this->curl->exec(array(
+    	$str = $this->curl->exec(array(
     			'url' => $source,
     			'method' => 'get',
     	));

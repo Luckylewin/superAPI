@@ -27,6 +27,7 @@ class thvl extends ottbase
         $response = $client->get($source, $this->setHeader([
             'referer' => 'http://thvl.vn/'
         ]));
+        $response = $response->getBody()->getContents();
 
     	//var_dump($str);
     	if (preg_match('/file: \"(.+m3u8)/', $response, $match)) {

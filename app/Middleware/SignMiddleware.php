@@ -13,6 +13,7 @@ use App\Components\http\Formatter;
 use App\Exceptions\ErrorCode;
 use Breeze\Http\Request;
 use Breeze\Http\MiddlewareInterface;
+use Workerman\Protocols\Http;
 
 /**
  * Token 校验中间件
@@ -25,14 +26,13 @@ class SignMiddleware implements MiddlewareInterface
     {
         $sign = $request->get('sign');
         $path = '/play/' . $request->get('name');
-        
+
         $result = Token::validate($sign, $path, $request->ip());
 
         if ($result == true || $request->get('noauth')) {
             return $request;
         }
 
-        return Formatter::back(null,ErrorCode::$RES_ERROR_LINK_EXPIRED);
+        return Http::header('location:http://img.ksbbs.com/asset/Mon_1703/05cacb4e02f9d9e.mp4');
     }
-
 }

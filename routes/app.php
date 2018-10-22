@@ -176,7 +176,7 @@ Route::get('/vods/{id}', 'App\Controller\IptvController@getVod');
 Route::get('/vod-links', 'App\Controller\IptvController@getVodLinks');
 
 // 推荐
-Route::get('/recommend/{id}', 'App\Controller\IptvController@getRecommends');
+Route::get('/recommends/{id}', 'App\Controller\IptvController@getRecommends');
 
 // 首页
 Route::get('/vods/home', 'App\Controller\IptvController@vodHome');
@@ -186,6 +186,8 @@ Route::get('/vods/condition', 'App\Controller\IptvController@getCondition');
 
 // 会员价格表
 Route::get('/order/price', 'App\Controller\MemberController@getPrice');
+
+
 
 // token中间件
 Route::group(['middleware' => 'token'], function() {

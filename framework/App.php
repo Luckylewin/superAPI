@@ -50,6 +50,7 @@ class App
             $request = new Request();
             // 用户iP
             $request->setIP($connection->getRemoteIp());
+            $format = $request->server('HTTP_ACCEPT');
 
             // 兼容json串路由
             if ($request->server()->REQUEST_URI === '/') {
@@ -70,7 +71,8 @@ class App
         } catch (\Exception $e) {
             echo $e->getMessage(), PHP_EOL;
         } finally {
-            $response = Response::bulid($result, $conf);
+
+            $response = Response::build($result, $conf, $format);
             $connection->send($response);
         }
     }

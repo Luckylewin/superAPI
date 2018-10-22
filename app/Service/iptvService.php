@@ -3,10 +3,9 @@ namespace App\Service;
 
 use App\Components\cache\Redis;
 use App\Components\helper\ArrayHelper;
-use App\Components\helper\Func;
 use App\Exceptions\ErrorCode;
 use Breeze\Helpers\Url;
-use Snoopy\Snoopy;
+use Breeze\Http\Request;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class iptvService extends common
@@ -116,7 +115,7 @@ class iptvService extends common
     public function getVod($id)
     {
         $vod = Capsule::table('iptv_vod')
-                    ->select('*')
+                    ->select(['vod_id', 'vod_cid' , 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year' , 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_gold', 'vod_length', 'vod_multiple', 'vod_language', 'vod_area'])
                     ->where('vod_id', '=', $id)
                     ->first();
 
@@ -140,15 +139,51 @@ class iptvService extends common
                     $v['_links']['self']['href'] = Url::to("vod-links/{$v['id']}", ['access-token' => '']);
                 });
 
-                $vod['vodLinks'] = [
-                    'total' => $total,
-                    'links' => $links
-                ];
+                $vod['vodLinks']['total'] = $total;
+                $vod['vodLinks']['links']['items'] = $links;
+            }
+        }
+
+        if ($expand == 'groupLinks') {
+            $query = Capsule::table('iptv_play_group')
+                            ->select('*')
+                            ->where('vod_id', '=', $id);
+            $total = $query->count();
+
+            if ($total) {
+                $vod['groupLinks']['total'] = $total;
+                $vod['groupLinks']['items'] = [];
+
+                $playGroups = ArrayHelper::toArray($query->get());
+                foreach ($playGroups as $playGroup) {
+                    $links = Capsule::table('iptv_vodlink')
+                                ->select(['id', 'episode', 'plot'])
+                                ->where('group_id', '=', $playGroup['id'])
+                                ->get();
+
+                    $data = [];
+                    $data['id']         = $playGroup['id'];
+                    $data['vod_id']     = $playGroup['vod_id'];
+                    $data['group_name'] = $playGroup['group_name'];
+                    $data['sort']       = $playGroup['sort'];
+
+                    $links = ArrayHelper::toArray($links);
+                    if (!empty($links)) {
+                        array_walk($links, function(&$v) {
+                            $v['_links']['self']['href'] = Url::to("vod-links/{$v['id']}", ['access-token' => '']);
+                        });
+                        $data['items'] = $links;
+                    }
+
+                    $vod['groupLinks']['items'] = $data;
+                }
+
             }
         }
 
         $vod['_links'] = [
             'self' => ['href' => Url::to("vods/{$id}", ["expand" => "vodLinks"])],
+            'groupLinks' => ['href' => Url::to("vods/{$id}", ["expand" => "groupLinks"])],
             'recommend' => ['href' => Url::to("recommends/{$id}")]
         ];
 
@@ -346,13 +381,25 @@ class iptvService extends common
          return ['status' => true, 'data' => $genres];
      }
 
-    /**
-     * 获取banner图
-     * @return array
-     */
+
      public function getBanner()
      {
-         $banners = Capsule::table('sys_banner')->select('*')->get();
+         $query = Capsule::table('sys_banner')
+                            ->select('*');
+
+         $canSortField = ['id', 'vod_id', 'sort', 'title'];
+         foreach ($canSortField as $field) {
+             if ($fieldValue = $this->request->get($field)) {
+                 if ($fieldValue == $field) {
+                     $query->orderBy($field, 'asc');
+                 } else {
+                     $query->orderBy($field, 'desc');
+                 }
+             }
+         }
+
+         $banners = $query->get();
+
          if (count($banners) <= 0) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
          }
@@ -384,8 +431,6 @@ class iptvService extends common
                         ->leftJoin('iptv_type_item AS b', 'b.type_id', '=', 'a.id')
                         ->get()
                         ->toArray();
-
-
 
         $data = [];
         foreach ($items as $item) {
@@ -453,14 +498,10 @@ class iptvService extends common
              return ['status' => false, 'data' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
          }
 
-         //每页的数量
-
-
          //计算总页
          $totalPage = self::getTotalPage($perPage, $totalItems);
 
          //计算offset
-
          $offset = ($page - 1) * $perPage;
 
 
@@ -516,9 +557,9 @@ class iptvService extends common
             ];
         } else {
             $link = [
-                'hd720' => 'http://fakelink.cn',
-                'medium' => 'http://fakelink.cn',
-                'small' => 'http://fakelink.cn'
+                'hd720' => 'http://img.ksbbs.com/asset/Mon_1703/05cacb4e02f9d9e.mp4',
+                'medium' => 'http://img.ksbbs.com/asset/Mon_1703/05cacb4e02f9d9e.mp4',
+                'small' => 'http://img.ksbbs.com/asset/Mon_1703/05cacb4e02f9d9e.mp4'
             ];
         }
 

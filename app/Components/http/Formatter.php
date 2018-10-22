@@ -89,12 +89,10 @@ class Formatter
 
     public static function back($data, $code)
     {
-        static::setFormat(self::JSON);
         $header['code'] = "10" . $code;
         $header['msg'] = ErrorCode::getError($code);
         $header['data'] = $data;
-
-        return json_encode($header);
+        return $header;
     }
 
 }

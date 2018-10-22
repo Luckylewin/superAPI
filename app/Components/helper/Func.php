@@ -123,4 +123,5 @@ class Func
         return chr(27) . "$out" . "$text" . chr(27) . "[0m";
     }
 
+
 }

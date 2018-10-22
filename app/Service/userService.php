@@ -88,10 +88,7 @@ class userService extends common
 
     }
 
-    /**
-     * @return array
-     * @throws \Exception
-     */
+
     public function getInfo()
     {
         $from = $this->post('from', 'box');

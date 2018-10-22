@@ -22,7 +22,7 @@ class tvnet extends ottbase
     public function getUrl($data){
     	$source = "http://118.107.85.21:1337/get-stream.json?p=smil:{$data['name']}.smil&t=l&ott=Phone_Android&ipz=118.107.85.37";
     	//var_dump($source);
-    	$str=$this->curl->exec(array(
+    	$str = $this->curl->exec(array(
     			'url'=>$source,
     			'method'=>'get'
     	));

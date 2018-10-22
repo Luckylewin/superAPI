@@ -69,10 +69,7 @@ class Response
     ];
 
     /**
-     * create http response header.
-     *
-     * @param  mixed  $header array or string
-     * @return void
+     * @param $headers
      */
     public static function format($headers)
     {
@@ -103,7 +100,7 @@ class Response
     public static function redirect($path)
     {
         // return Closure
-        // to notice bulid method the type of response
+        // to notice build method the type of response
         return function() use($path) {
             // run Location
             Response::format("Location: $path");
@@ -113,19 +110,17 @@ class Response
     }
 
     /**
-     * build response data.
-     *
-     * @param  mixed  $data
-     * @param  array  $conf
+     * @param $data
+     * @param array $conf
+     * @param string $format
      * @return string
-     * @throws \InvalidArgumentException
      */
-    public static function bulid($data, array $conf)
+    public static function build($data, array $conf, $format)
     {
-        // should be json
+        // 数组或者对象
         if (is_array($data) || is_object($data)) {
-            // Closure
-            if ($data instanceof Closure) {
+            // 闭包
+            if ($data instanceof \Closure) {
                 $result = call_user_func($data);
                 // is redirect Closure
                 if ($result == 'redirect') {
@@ -134,16 +129,23 @@ class Response
 
                 return '';
             }
-            // Array \ Object
-            self::format(self::JSON);
-            return self::_compress(json_encode($data), $conf['compress']);
+
+            if (strpos($format, 'xml') !== false) {
+                self::format(self::XML);
+                return (new XmlResponseFormatter)->format($data);
+            } else {
+                self::format(self::JSON);
+                return self::_compress(json_encode($data), $conf['compress']);
+            }
         }
-        // is string (could be html string)
+
+        // 字符串
         if (is_string($data)) {
             return self::_compress($data, $conf['compress']);
         }
+
         // if return others, regard as illegal
-        return '';
+        return ':( error';
         // throw new \InvalidArgumentException("Controller return illegal data type!");
     }
 
@@ -157,23 +159,23 @@ class Response
     protected static function _compress($data, array $compress_conf)
     {
         $compress_data = $data;
-        // get accept encodeing from request
-        $accept_encodeing = explode(',', $_SERVER['HTTP_ACCEPT_ENCODING']);
+        // get accept encoding from request
+        $accept_encoding = explode(',', $_SERVER['HTTP_ACCEPT_ENCODING']);
         // get response headers Content-Type
         $header = self::getHeader('Content-Type');
         $content_type = $header ? $header : "Content-Type: text/html;charset=utf-8";
 
-        foreach ($accept_encodeing as $key => $value) {
-            $accept_encodeing[$key] = trim($value);
+        foreach ($accept_encoding as $key => $value) {
+            $accept_encoding[$key] = trim($value);
         }
 
         // is compress conf be accepted?
-        if (in_array($compress_conf['encoding'], $accept_encodeing)) {
+        if (in_array($compress_conf['encoding'], $accept_encoding)) {
             // get content type string
             preg_match('/^Content-Type\:\s*([^;]+)\s*;?/', $content_type, $match);
             // is content type enable compress ?
             if (in_array($match[1], $compress_conf['content_type'])) {
-                // check conf encodeing, enable compress
+                // check conf encoding, enable compress
                 switch ($compress_conf['encoding']) {
                     case 'gzip':
                         self::format("Content-Encoding: gzip");

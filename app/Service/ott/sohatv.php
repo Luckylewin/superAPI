@@ -40,12 +40,13 @@ class sohatv extends ottbase
     	$timestamp = date("YmdHis");;
     	$source = "http://play.sohatv.vn/?v={$this->name[$index]}&t={$timestamp}&autoplay=true";
 
-    	$client = $this->getHttpClient();
-    	$str = $client->get($source, $this->setHeader([
-            'referer' => 'http://vtv.vn/'
-        ]));
+        $str = $this->setCurl()->exec(array(
+                'url'     =>  $source,
+                'method'  => 'get',
+                'referer' => 'http://vtv.vn/'
+        ));
 
-    	$url="";
+    	$url = "";
 
     	if (preg_match('/live=(.+m3u8)/', $str, $match)) {
     		$url = "http:".urldecode($match[1]);
