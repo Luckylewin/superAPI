@@ -362,9 +362,31 @@ class iptvService extends common
              return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
          }
 
+         $expand = $this->request->get('expand');
          $genres = ArrayHelper::toArray($genres);
 
-         array_walk($genres, function(&$v) {
+
+
+         array_walk($genres, function(&$v) use($expand) {
+
+             if ($expand == 'condition') {
+                 $items = Capsule::table('iptv_type AS a')
+                                 ->where('vod_list_id', '=', $v['list_id'])
+                                 ->select(['a.*', 'b.name as itemName','b.zh_name'])
+                                 ->orderBy('a.sort')
+                                 ->leftJoin('iptv_type_item AS b', 'b.type_id', '=', 'a.id')
+                                 ->get()
+                                 ->toArray();
+
+                 $data = [];
+                 foreach ($items as $item) {
+                     $data[$item->field]['name'] = $item->name;
+                     $data[$item->field]['field'] = $item->field;
+                     $data[$item->field]['items'][] = ['name' => $item->itemName, 'zh_name' => $item->zh_name];
+                 }
+                 
+                 $v['condition'] = array_values($data);
+             }
              $v['_links'] = [
                  'self' => [
                      Url::to('types/' . $v['list_id'])
@@ -425,7 +447,7 @@ class iptvService extends common
         }
 
         $items = Capsule::table('iptv_type AS a')
-                        ->where('vod_list_id', '=', '1')
+                        ->where('vod_list_id', '=', $vod_id)
                         ->select(['a.*', 'b.name as itemName','b.zh_name'])
                         ->orderBy('a.sort')
                         ->leftJoin('iptv_type_item AS b', 'b.type_id', '=', 'a.id')
