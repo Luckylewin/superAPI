@@ -62,7 +62,7 @@ class Route {
      *
      * @var array
      */
-    protected static $_variable_replacement = '([0-9|a-z|A-Z|_]+)';
+    protected static $_variable_replacement = '([0-9|a-z|A-Z|_|-]+)';
 
     /**
      * route config filter.
