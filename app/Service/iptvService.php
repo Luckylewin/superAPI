@@ -5,7 +5,6 @@ use App\Components\cache\Redis;
 use App\Components\helper\ArrayHelper;
 use App\Exceptions\ErrorCode;
 use Breeze\Helpers\Url;
-use Breeze\Http\Request;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class iptvService extends common
@@ -196,11 +195,11 @@ class iptvService extends common
      */
      public function getVods()
      {
-         $cid = $this->request->get('cid') ?? '';
-         $name = $this->request->get('name') ?? '';
-         $type = $this->request->get('type') ?? '';
-         $year = $this->request->get('year') ?? '';
-         $area = $this->request->get('area') ?? '';
+         $cid = $this->request->get('cid') ?? ($this->request->get('vod_cid') ?? '');
+         $name = $this->request->get('name') ?? ($this->request->get('vod_name') ?? '');
+         $type = $this->request->get('type') ?? ($this->request->get('vod_type') ?? '');
+         $year = $this->request->get('year') ?? ($this->request->get('vod_year') ?? '');
+         $area = $this->request->get('area') ?? ($this->request->get('vod_language') ?? '');
 
          $per_page = $this->request->get('per_page') ?? 12;
          $page = $this->request->get('page') ?? 1;
@@ -266,7 +265,8 @@ class iptvService extends common
          $vods = ArrayHelper::toArray($vods);
          array_walk($vods, function(&$v) {
              $v['_links'] = [
-                 'self' => [Url::to('vods/' . $v['vod_id'], ['expand' => 'vodLinks'])],
+                 'self' => [Url::to('vods/' . $v['vod_id'], ['expand' => 'groupLinks'])],
+                 'groupLinks' => ['href' => Url::to("vods/{$v['vod_id']}", ["expand" => "groupLinks"])],
                  'recommend' => [Url::to('recommend/' . $v['vod_id'])]
              ];
          });
@@ -601,6 +601,9 @@ class iptvService extends common
         }
 
         $link = Capsule::table('iptv_vodlink')->where('id', '=', $id)->first();
+
+        // 查询这个link的分组名称
+        // $group = Capsule::table('iptv_play_group')->where('group_id', '=', $link->group_id)->first();
 
         if (is_null($link)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
