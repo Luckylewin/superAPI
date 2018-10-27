@@ -174,7 +174,7 @@ class iptvService extends common
                         $data['items'] = $links;
                     }
 
-                    $vod['groupLinks']['items'] = $data;
+                    $vod['groupLinks']['items'][] = $data;
                 }
 
             }
