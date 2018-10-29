@@ -9,14 +9,12 @@
 namespace App\Middleware;
 
 use App\Components\encrypt\Token;
-use App\Components\http\Formatter;
-use App\Exceptions\ErrorCode;
 use Breeze\Http\Request;
 use Breeze\Http\MiddlewareInterface;
 use Workerman\Protocols\Http;
 
 /**
- * Token 校验中间件
+ * Sign 加密签名 校验中间件
  * Class TokenMiddleware
  * @package App\Middleware
  */
@@ -24,8 +22,9 @@ class SignMiddleware implements MiddlewareInterface
 {
     public function handle(Request $request)
     {
+        
         $sign = $request->get('sign');
-        $path = '/play/' . $request->get('name');
+        $path = strstr($request->server('REQUEST_URI'), '?', true);
 
         $result = Token::validate($sign, $path, $request->ip());
 
