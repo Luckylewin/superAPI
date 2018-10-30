@@ -88,9 +88,10 @@ OO;
     public function proxy()
     {
         $path = $this->request->get('path');
-        $filename = basename($path);
+        $filename =  substr(md5($path), 0 ,6) .'-'.basename($path);
+
         $savePath = "/home/upload/youtube/{$filename}";
-        
+
         if (FileHelper::exist($savePath)) {
             return Response::redirect(Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600));
         }
