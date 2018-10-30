@@ -63,7 +63,7 @@ class PlayController extends BaseController
             // 带鉴权模式
             // http://192.168.0.11:12389/play/vtv1?resolve=hplus&sign=b4e2a6e01539680519
             $data['header'] = $this->request->get('resolve');
-            $data['name'] = $name;
+            $data['name']   = $name;
         }
 
         $url = $this->play($uid,$data);

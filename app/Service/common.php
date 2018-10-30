@@ -12,7 +12,6 @@ use App\Components\cache\Redis;
 use App\Components\helper\Func;
 use App\Components\Validator;
 use App\Exceptions\ErrorCode;
-use Breeze\Config;
 use Breeze\Http\Request;
 
 class common

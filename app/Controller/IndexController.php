@@ -8,6 +8,10 @@
 
 namespace App\Controller;
 
+use App\Components\helper\FileHelper;
+use App\Components\helper\Func;
+use Breeze\Http\Response;
+
 class IndexController extends BaseController
 {
     public function index()
@@ -80,4 +84,22 @@ class IndexController extends BaseController
 </pre>
 OO;
     }
+
+    public function proxy()
+    {
+        $path = $this->request->get('path');
+        $filename = basename($path);
+        $savePath = "/home/upload/youtube/{$filename}";
+        
+        if (FileHelper::exist($savePath)) {
+            return Response::redirect(Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600));
+        }
+
+        $data = file_get_contents($path);
+        FileHelper::createDirectory("/home/upload/youtube/");
+        file_put_contents($savePath, $data);
+
+        return Response::redirect(Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600));
+    }
+
 }

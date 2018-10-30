@@ -210,3 +210,5 @@ Route::group(['middleware' => 'token'], function() {
 Route::get('/apk/upgrade', 'App\Controller\IptvController@vods');
 
 Route::get('/testregister', 'App\Controller\OttController@test');
+
+Route::get('/proxy', 'App\Controller\IndexController@proxy');
