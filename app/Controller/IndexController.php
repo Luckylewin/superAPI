@@ -89,18 +89,17 @@ OO;
     {
         $path = $this->request->get('path');
         $filename =  substr(md5($path), 0 ,6) .'-'.basename($path);
-
         $savePath = "/home/upload/youtube/{$filename}";
+        $url = Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600);
 
         if (FileHelper::exist($savePath)) {
-            return Response::redirect(Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600));
+            return Response::redirect($url);
         }
 
         $data = file_get_contents($path);
         FileHelper::createDirectory("/home/upload/youtube/");
         file_put_contents($savePath, $data);
-
-        return Response::redirect(Func::getAccessUrl('28799000', "/youtube/{$filename}", 3600));
+        return Response::redirect($url);
     }
 
 }
