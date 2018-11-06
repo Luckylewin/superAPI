@@ -146,7 +146,9 @@ class iptvService extends common
         if ($expand == 'groupLinks') {
             $query = Capsule::table('iptv_play_group')
                             ->select('*')
-                            ->where('vod_id', '=', $id);
+                            ->where('vod_id', '=', $id)
+                            ->where('use_flag', '=', 1);
+            
             $total = $query->count();
 
             if ($total) {
@@ -158,6 +160,7 @@ class iptvService extends common
                     $links = Capsule::table('iptv_vodlink')
                                 ->select(['id', 'episode', 'plot'])
                                 ->where('group_id', '=', $playGroup['id'])
+                                ->orderBy('episode', 'desc')
                                 ->get();
 
                     $data = [];
