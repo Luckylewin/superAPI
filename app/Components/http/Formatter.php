@@ -45,7 +45,7 @@ class Formatter
                 $header[$k] = $v;
             }
         }
-        $header['data'] = $data;
+        $header['data'] = empty($data) ? "" : $data;
 
         return json_encode($header);
     }
@@ -82,7 +82,7 @@ class Formatter
     {
         $data['header'] = self::$header;//增加头
         $data['error'] = "success";
-        $data['data'] = $new_data;
+        $data['data'] = empty($new_data) ? "": $new_data;
 
         return json_encode($data);
     }
@@ -91,7 +91,7 @@ class Formatter
     {
         $header['code'] = "10" . $code;
         $header['msg'] = ErrorCode::getError($code);
-        $header['data'] = $data;
+        $header['data'] = empty($data) ? "" : $data;
         return $header;
     }
 
