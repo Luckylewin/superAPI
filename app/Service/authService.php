@@ -53,6 +53,7 @@ class authService extends common
             $this->_checkIsExpire($macInfo);
             $this->_checkIsActive($macInfo);
             $tokenData = $this->_generateToken($this->uid);
+
             $macInfo['access_token'] = $tokenData['token'];
             $macInfo['access_token_expire'] = $tokenData['expire'];
             $this->_updateInfo($macInfo);
@@ -464,13 +465,19 @@ class authService extends common
 
     private function _generateAccessToken($MAC)
     {
+        $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
+
+        if (time() - strtotime($cache->hGet($MAC,'logintime')) < 30) {
+             return $cache->hGet($MAC,'token');
+        }
+
         $valid_time = 3600 * 6;
         $expire_time = $valid_time + time();
         AES::setKEY(substr(md5($MAC . AES::$_KEY),16,32));
         $encrypt = AES::encrypt(mt_rand(111,999)."|".$this->clientIP.'|'.$MAC.'|'.$expire_time);
         $token = base64_encode($encrypt);
         $token = str_replace('=','*', $token);
-        $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
+
         $cache->hSet($MAC,'token', $token);
         $cache->hSet($MAC,'logintime', date('Y-m-d H:i:s'));
         $cache->expire($MAC,$valid_time);
