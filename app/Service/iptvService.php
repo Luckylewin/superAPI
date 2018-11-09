@@ -240,7 +240,7 @@ class iptvService extends common
             switch ($cat)
             {
                 case 'hot':
-                    $query->orderBy('vod_hits');
+                    $query->orderBy('vod_hits', 'desc');
                     break;
             }
          }
