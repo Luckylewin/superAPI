@@ -198,11 +198,12 @@ class iptvService extends common
      */
      public function getVods()
      {
-         $cid = $this->request->get('cid') ?? ($this->request->get('vod_cid') ?? '');
-         $name = $this->request->get('name') ?? ($this->request->get('vod_name') ?? '');
-         $type = $this->request->get('type') ?? ($this->request->get('vod_type') ?? '');
-         $year = $this->request->get('year') ?? ($this->request->get('vod_year') ?? '');
-         $area = $this->request->get('area') ?? ($this->request->get('vod_language') ?? '');
+         $cid   = $this->request->get('cid')  ?? ($this->request->get('vod_cid') ?? '');
+         $name  = $this->request->get('name') ?? ($this->request->get('vod_name') ?? '');
+         $type  = $this->request->get('type') ?? ($this->request->get('vod_type') ?? '');
+         $year  = $this->request->get('year') ?? ($this->request->get('vod_year') ?? '');
+         $area  = $this->request->get('area') ?? ($this->request->get('vod_language') ?? '');
+         $cat   = $this->request->get('cat')  ?? '';
 
          $per_page = $this->request->get('per_page') ?? 12;
          $page = $this->request->get('page') ?? 1;
@@ -235,6 +236,15 @@ class iptvService extends common
              $query->where('vod_area', 'like', '%' . $area . '%');
          }
 
+         if ($cat) {
+            switch ($cat)
+            {
+                case 'hot':
+                    $query->orderBy('vod_hits');
+                    break;
+            }
+         }
+
          $totalCount = $query->count();
          $pageCount = ceil($totalCount / $per_page);
 
@@ -246,10 +256,10 @@ class iptvService extends common
 
          // 参数检查
          $params = [
-                    'cid' => $cid,
-                    'name' => $name,
-                    'per_page' => $per_page,
-                    'page' => $page,
+                    'cid'       => $cid,
+                    'name'      => $name,
+                    'per_page'  => $per_page,
+                    'page'      => $page,
 
          ];
 
@@ -258,6 +268,8 @@ class iptvService extends common
                  unset($params[$key]);
              }
          }
+
+
 
          $vods = $query->offset($offset)->limit($per_page)->get();
 
