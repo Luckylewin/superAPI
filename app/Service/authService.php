@@ -43,6 +43,11 @@ class authService extends common
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_REQUEST];
         }
 
+        $time = (int) substr($timestamp,0, 10);
+        if (abs(time() - $time) > 3600) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_REQUEST];
+        }
+
         $serverSign = md5(md5($this->uid . $timestamp) . md5('topthinker' . $timestamp));
         if ($serverSign != $signature) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
