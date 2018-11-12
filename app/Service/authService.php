@@ -473,8 +473,8 @@ class authService extends common
         $valid_time = 3600 * 6;
         $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
 
-        if (time() - strtotime($cache->hGet($MAC,'logintime')) < 30) {
-            $expire_time = time() + $valid_time - 40;
+        if (time() - strtotime($cache->hGet($MAC,'logintime')) < 60) {
+            $expire_time = time() + $valid_time - 70;
             return ['token' => $cache->hGet($MAC,'token'),'expire' => $expire_time];
         }
 

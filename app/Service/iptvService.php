@@ -206,7 +206,7 @@ class iptvService extends common
          $cat   = $this->request->get('cat')  ?? '';
 
          $per_page = $this->request->get('per_page') ?? 12;
-         $page = $this->request->get('page') ?? 1;
+         $page     = $this->request->get('page') ?? 1;
 
 
          $query = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple']);
@@ -298,6 +298,11 @@ class iptvService extends common
          $data['_links'] = $this->setLinks($data['_meta'], $params);
 
          return ['status' => true, 'data' => $data];
+     }
+
+     public function getHot()
+     {
+         $cid   = $this->request->get('cid')  ?? ($this->request->get('vod_cid') ?? '');
      }
 
     /**
