@@ -207,7 +207,7 @@ Route::group(['middleware' => 'token'], function() {
 });
 
 // apk 升级
-Route::get('/apk/upgrade', 'App\Controller\IptvController@vods');
+Route::get('/apk/upgrade', 'App\Controller\OttController@getNewApp');
 
 Route::get('/testregister', 'App\Controller\OttController@test');
 
