@@ -165,7 +165,7 @@ class appService extends common
         try {
             if ($this->request->isGet) {
                 $ver = $this->request->get('ver', 0);
-                $type = $this->request->post('type');
+                $type = $this->request->get('type');
             } else {
                 $ver = $this->post('ver', 0);
                 $type = $this->post('type');
