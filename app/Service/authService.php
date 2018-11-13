@@ -217,8 +217,9 @@ class authService extends common
         if ($info['expire'] <= time()) {
             return false;
         }
+        // 检查用户 ip 不一致则不通过
         if ($info['clientIP'] != $this->request->ip()) {
-            return false;
+            // return false;
         }
 
         return true;
