@@ -54,16 +54,20 @@ class Request
      */
     protected static $_clientIP;
 
+    public $isGet;
+
+    public $isPost;
 
     public function __construct()
     {
-        $this->_get = (object) $_GET;
-        $this->_post = (object) $_POST;
+        $this->_get     = (object) $_GET;
+        $this->_post    = (object) $_POST;
         $this->_request = (object) $_REQUEST;
-        $this->_cookie = (object) $_COOKIE;
-        $this->_server = (object) $_SERVER;
+        $this->_cookie  = (object) $_COOKIE;
+        $this->_server  = (object) $_SERVER;
         $this->_rawData = (object) $GLOBALS['HTTP_RAW_POST_DATA'];
-
+        $this->isGet    = $this->_server->REQUEST_METHOD == 'GET'  ? true : false;
+        $this->isPost   = $this->_server->REQUEST_METHOD == 'POST' ? true : false;
     }
 
     /**
@@ -85,14 +89,14 @@ class Request
      * @param null $key
      * @return null|object
      */
-    public function get($key = null)
+    public function get($key = null, $default = null)
     {
         if (is_null($key)) {
             return $this->_get;
         } else if (isset($this->_get->$key)) {
             return $this->_get->$key;
         } else {
-            return null;
+            return $default;
         }
     }
 
@@ -106,14 +110,14 @@ class Request
         $this->_server->REQUEST_URI = $uri;
     }
 
-    public function post($key = null)
+    public function post($key = null, $default = null)
     {
         if (is_null($key)) {
             return $this->_post;
         } else if (isset($this->_post->$key)) {
             return $this->_post->$key;
         } else {
-            return null;
+            return $default;
         }
     }
 

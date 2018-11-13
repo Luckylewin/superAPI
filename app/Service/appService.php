@@ -11,6 +11,7 @@ use App\Components\helper\ArrayHelper;
 use App\Components\Aliyun\MyOSS;
 use App\Components\helper\Func;
 use App\Exceptions\ErrorCode;
+use Breeze\Http\Request;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class appService extends common
@@ -154,6 +155,7 @@ class appService extends common
 
     }
 
+
     /**
      * App 更新
      * @return array
@@ -161,8 +163,13 @@ class appService extends common
     public function updateApp()
     {
         try {
-            $ver = $this->post('ver', 0);
-            $type = $this->post('type');
+            if ($this->request->isGet) {
+                $ver = $this->request->get('ver', 0);
+                $type = $this->request->post('type');
+            } else {
+                $ver = $this->post('ver', 0);
+                $type = $this->post('type');
+            }
         } catch (\Exception $e) {
             $this->stdout($e->getMessage(), 'ERROR');
             return ['status' => false, 'code' => $e->getCode()];
