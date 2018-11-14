@@ -489,7 +489,7 @@ class iptvService extends common
         $data = [];
         foreach ($items as $item) {
             $data[$item->field]['name']  = $item->name;
-            $data[$item->field]['field'] = $item->field;
+            $data[$item->field]['field'] = ucfirst($item->field);
             $data[$item->field]['image'] = 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
             $data[$item->field]['items'][] = ['name' => $item->itemName, 'zh_name' => $item->zh_name];
             $data[$item->field]['_links'] = [
