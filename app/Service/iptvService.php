@@ -603,103 +603,7 @@ class iptvService extends common
 
         $finalData = [
             'items'  => $data,
-            '_links' => $this->setLinks($type_meta,'iptv/hot', $type_params, 'type_page'),
-            '_meta'  => $type_meta
-        ];
-
-        return ['status' => true, 'data' => $finalData];
-    }
-
-    /**
-     * 获取分类下最热
-     * @return array
-     */
-    public function getByHot()
-    {
-        $type = $this->request->get('type', 'Movie');
-        // 计算type的offset
-        $type_params = $this->getTypeParams();
-        list($type_offset, $type_limit) = $this->getOffset($type_params['type_page'], $type_params['type_perpage']);
-
-        // 计算items的offset
-        $params = $this->getTypeItemParams();
-        list($items_offset, $items_limit) = $this->getOffset($params['items_page'], $params['items_perpage']);
-
-        // 根据type查找cid
-        $vods = VodList::findByDirName($type);
-
-        if (!$vods) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-        }
-
-        $list_id = $vods->list_id;
-        $typesArr = Vod::getAllTagByListID($list_id);
-
-        if (empty($typesArr)) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-        }
-
-        $data       = [];
-        $type_meta  = [
-            'totalCount'  => count($typesArr),
-            'pageCount'   => ceil(count($typesArr)/$type_params['type_perpage']),
-            'currentPage' => $type_params['type_page'],
-            'perPage'     => $type_params['type_perpage']
-        ];
-        // 因为type 是存到一个字段里面的 所以要通过array_slice 达到'分页'效果
-        $typesArr = array_slice($typesArr, $type_offset, $type_limit);
-
-        foreach ($typesArr as $str) {
-            $query = Capsule::table('iptv_vod')
-                            ->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
-                            ->where('vod_type', 'like', "%$str%")
-                            ->where('vod_cid', '=', $list_id);
-
-            $total = $query->count();
-
-            $vods = $query->orderBy('vod_hits', 'desc')
-                          ->limit($items_limit)
-                          ->offset($items_offset)
-                          ->get();
-
-            $vods   = ArrayHelper::toArray($vods);
-            $vods   = $this->setItemLink($vods);
-
-            $_meta  = [
-                'totalCount'  => $total,
-                'pageCount'   => ceil($total/$params['items_perpage']),
-                'currentPage' => $params['items_page'],
-                'perPage'     => $params['items_perpage']
-            ];
-
-            $params['field'] = 'hot';
-            $params['genre'] = $str;
-            $params['cid']   = $list_id;
-
-            $params = array_reverse($params);
-
-            $_links = $this->setLinks($_meta,'iptv/list', $params, 'items_page');
-
-            if ($total) {
-                $data[] = [
-                    'type'   => $str,
-                    'items'  => $vods,
-                    '_links' => $_links,
-                    '_meta'  => $_meta,
-                    'total'  => $total
-                ];
-            }
-        }
-
-        if (empty($data)) {
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-        }
-
-        array_multisort(array_column($data, 'total'),SORT_DESC, $data);
-
-        $finalData = [
-            'items'  => $data,
-            '_links' => $this->setLinks($type_meta,'iptv/hot', $type_params, 'type_page'),
+            '_links' => $this->setLinks($type_meta,'iptv/'.$mode, $type_params, 'type_page'),
             '_meta'  => $type_meta
         ];
 
@@ -786,7 +690,7 @@ class iptvService extends common
         $params['genre'] = $genre;
         $params = array_reverse($params);
 
-        $_links = $this->setLinks($_meta,'iptv/hot/index', $params, 'items_page');
+        $_links = $this->setLinks($_meta,'iptv/list', $params, 'items_page');
         $data = [
             'items'  => $vods,
             '_links' => $_links,

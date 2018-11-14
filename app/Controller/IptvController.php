@@ -188,7 +188,7 @@ class IptvController extends BaseController
     public function getByLanguage()
     {
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getByLanguage();
+        $data = $iptvService->getDimensionData('language');
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
