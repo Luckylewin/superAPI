@@ -353,6 +353,7 @@ class iptvService extends common
                                                         ->get();
 
                 $vods  = ArrayHelper::toArray($vods);
+                $vods  = $this->setItemLink($vods);
                 $total = count($vods);
 
                 if ($total) {
@@ -372,6 +373,19 @@ class iptvService extends common
 
          return ['status' => true, 'data' => $data];
      }
+
+    private function setItemLink($vods)
+    {
+        array_walk($vods, function(&$vod) {
+            $vod['_links'] = [
+                'self' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "vodLinks"])],
+                'groupLinks' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "groupLinks"])],
+                'recommend' => ['href' => Url::to("recommends/{$vod['vod_id']}")]
+            ];
+        });
+
+        return $vods;
+    }
 
     /**
      * 设置资源描述
