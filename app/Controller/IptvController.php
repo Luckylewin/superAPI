@@ -125,10 +125,82 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getHot()
+    public function getCategory()
     {
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getHot();
+        $data = $iptvService->getCategory();
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getByHot()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getDimensionData('hot');
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getByType()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getDimensionData('type');
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getByYear()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getDimensionData('year');
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getByArea()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getDimensionData('area');
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getByLanguage()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getByLanguage();
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
+
+    public function getList()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getList();
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);

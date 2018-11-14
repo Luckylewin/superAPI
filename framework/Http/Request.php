@@ -87,7 +87,8 @@ class Request
 
     /**
      * @param null $key
-     * @return null|object
+     * @param null $default
+     * @return null|object|integer|string
      */
     public function get($key = null, $default = null)
     {

@@ -4,6 +4,8 @@ namespace App\Service;
 use App\Components\cache\Redis;
 use App\Components\helper\ArrayHelper;
 use App\Exceptions\ErrorCode;
+use App\Models\Vod;
+use App\Models\VodList;
 use Breeze\Helpers\Url;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -293,7 +295,7 @@ class iptvService extends common
              'perPage' => $per_page
          ];
 
-         $data['_links'] = $this->setLinks($data['_meta'], $params);
+         $data['_links'] = $this->setLinks($data['_meta'],'vods', $params, 'page');
 
          return ['status' => true, 'data' => $data];
      }
@@ -314,143 +316,71 @@ class iptvService extends common
      }
 
     /**
-     * 获取分类下最热
-     * @return array
-     */
-     public function getHot()
-     {
-         $type = $this->request->get('type', 'Movie');
-
-         // 根据type查找cid
-         $vods = Capsule::table('iptv_list')
-                         ->select('list_id')
-                         ->where('list_dir', '=', $type)
-                         ->first();
-
-         if (is_null($vods)) {
-             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-         }
-
-         $list_id = $vods->list_id;
-
-         //遍历查询
-         $types = Capsule::table('iptv_vod')->select('vod_type')->where('vod_cid', '=', $list_id)->distinct()->get();
-         $types = ArrayHelper::toArray($types);
-         $typesArr = [];
-         array_walk($types, function($v) use(&$typesArr) {
-              $typesArr = array_merge($typesArr, explode(',', $v['vod_type']));
-         });
-         $typesArr = array_unique($typesArr);
-
-         $data = [];
-         // 进行查询
-         if (!empty($typesArr)) {
-            foreach ($typesArr as $type) {
-                $vods = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
-                                                        ->where('vod_type', 'like', "%$type%")
-                                                        ->where('vod_cid', '=', $list_id)
-                                                        ->orderBy('vod_year', 'desc')
-                                                        ->get();
-
-                $vods  = ArrayHelper::toArray($vods);
-                $vods  = $this->setItemLink($vods);
-                $total = count($vods);
-
-                if ($total) {
-                    $data[] = [
-                        'type'  => $type,
-                        'items' => $vods,
-                        'total' => $total
-                    ];
-                }
-            }
-
-            array_multisort(array_column($data, 'total'),SORT_DESC, $data);
-         }
-         if (empty($data)) {
-             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-         }
-
-         return ['status' => true, 'data' => $data];
-     }
-
-    private function setItemLink($vods)
-    {
-        array_walk($vods, function(&$vod) {
-            $vod['_links'] = [
-                'self' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "vodLinks"])],
-                'groupLinks' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "groupLinks"])],
-                'recommend' => ['href' => Url::to("recommends/{$vod['vod_id']}")]
-            ];
-        });
-
-        return $vods;
-    }
-
-    /**
      * 设置资源描述
      * @param $meta
+     * @param $route
      * @param $params
+     * @param $pageField
      * @return array
      */
-     private function setLinks($meta, $params)
+     private function setLinks($meta, $route, $params, $pageField='page')
      {
-         if ($params['page'] == 1) {
-             if ($meta['totalCount'] == 1) {
+         if ($params[$pageField] == 1) {
+             if ($meta['pageCount'] == 1) {
                  return [
-                     'self' => $this->setSelf($params)
+                     'self' => $this->setSelf($route,$params, $pageField)
                  ];
              } else {
                  return [
-                     'self' => $this->setSelf($params),
-                     'next' => $this->setNext($params),
-                     'last' => $this->setLast($params, $meta)
+                     'self' => $this->setSelf($route, $params, $pageField),
+                     'next' => $this->setNext($route, $params, $pageField),
+                     'last' => $this->setLast($route, $params, $meta, $pageField)
                  ];
              }
-         } else if ($params['page'] < $meta['totalCount']) {
+         } else if ($params[$pageField] < $meta['totalCount']) {
              return [
-                 'self' => $this->setSelf($params),
-                 'first' => $this->setFirst($params),
-                 'prev' => $this->setPrev($params),
-                 'next' => $this->setNext($params),
-                 'last' => $this->setLast($params, $meta)
+                 'self' => $this->setSelf($route, $params, $pageField),
+                 'first' => $this->setFirst($route, $params, $pageField),
+                 'prev' => $this->setPrev($route, $params, $pageField),
+                 'next' => $this->setNext($route, $params, $pageField),
+                 'last' => $this->setLast($route, $params, $meta, $pageField)
              ];
          } else {
              return [
-                 'self' => $this->setSelf($params),
-                 'first' => $this->setFirst($params),
-                 'prev' => $this->setPrev($params),
+                 'self' => $this->setSelf($route, $params,  $pageField),
+                 'first' => $this->setFirst($route, $params,  $pageField),
+                 'prev' => $this->setPrev($route, $params, $pageField),
              ];
          }
      }
 
-     private function setSelf($params)
+     private function setSelf($route, $params, $pageField)
      {
-         return ['href' => Url::to('vods', $params)];
+         return ['href' => Url::to($route, $params)];
      }
 
-     private function setFirst($params)
+     private function setFirst($route, $params, $pageField)
      {
-         $params['page'] = 1;
-         return ['href' => Url::to('vods', $params)];
+         $params[ $pageField] = 1;
+         return ['href' => Url::to($route, $params)];
      }
 
-     private function setPrev($params)
+     private function setPrev($route, $params, $pageField)
      {
-        $params['page']--;
-        return ['href' => Url::to('vods', $params)];
+        $params[ $pageField]--;
+        return ['href' => Url::to($route, $params)];
      }
 
-     private function setNext($params)
+     private function setNext($route, $params, $pageField)
      {
-         $params['page']++;
-         return ['href' => Url::to('vods', $params)];
+         $params[$pageField]++;
+         return ['href' => Url::to($route, $params)];
      }
 
-     private function setLast($params, $meta)
+     private function setLast($route, $params, $meta, $pageField)
      {
-        $params['page'] = $meta['pageCount'];
-        return ['href' => Url::to('vods', $params)];
+        $params[$pageField] = $meta['pageCount'];
+        return ['href' => Url::to($route, $params)];
      }
 
     /**
@@ -539,6 +469,345 @@ class iptvService extends common
          return ['status' => true, 'data' => $banners];
      }
 
+
+    /**
+     * 获取左侧/顶部/底部 栏目
+     * @return array
+     */
+    public function getCategory()
+    {
+        $type = $this->request->get('type', 'Movie');
+        $type = ucfirst(strtolower($type));
+        // 根据type查找cid
+        $vods = VodList::findByDirName($type);
+        if (is_null($vods)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $items = VodList::getAllSearchItemsByListID($vods->list_id);
+
+        $data = [];
+        foreach ($items as $item) {
+            $data[$item->field]['name']  = $item->name;
+            $data[$item->field]['field'] = $item->field;
+            $data[$item->field]['image'] = 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
+            $data[$item->field]['items'][] = ['name' => $item->itemName, 'zh_name' => $item->zh_name];
+            $data[$item->field]['_links'] = [
+                'self' => Url::to('iptv/' . $item->field, ['type' => $type])
+            ];
+        }
+
+        if (empty($data)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        return ['status' => true, 'data' => $data];
+    }
+
+
+    public function getDimensionData($mode = 'hot')
+    {
+        $type = $this->request->get('type', 'Movie');
+        // 计算type的offset
+        $type_params = $this->getTypeParams();
+        list($type_offset, $type_limit) = $this->getOffset($type_params['type_page'], $type_params['type_perpage']);
+
+        // 计算items的offset
+        $params = $this->getTypeItemParams();
+        list($items_offset, $items_limit) = $this->getOffset($params['items_page'], $params['items_perpage']);
+
+        // 根据type查找cid
+        $vods = VodList::findByDirName($type);
+        
+        if (!$vods) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $list_id = $vods->list_id;
+
+        switch ($mode)
+        {
+            case 'year':
+                $typesArr = Vod::getAllValueByListID($list_id, 'vod_year');
+                break;
+            case 'area':
+                $typesArr = Vod::getAllValueByListID($list_id, 'vod_area');
+                break;
+            case 'language':
+                $typesArr = Vod::getAllValueByListID($list_id, 'vod_language');
+                break;
+            case 'hot':
+                $typesArr = Vod::getAllTagByListID($list_id);
+                break;
+            case 'type':
+                $typesArr = Vod::getAllTagByListID($list_id);
+                break;
+            default:
+                $typesArr = [];
+        }
+
+        if (empty($typesArr)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $data       = [];
+        $type_meta  = [
+            'totalCount'  => count($typesArr),
+            'pageCount'   => ceil(count($typesArr)/$type_params['type_perpage']),
+            'currentPage' => $type_params['type_page'],
+            'perPage'     => $type_params['type_perpage']
+        ];
+        // 因为type 是存到一个字段里面的 所以要通过array_slice 达到'分页'效果
+        $typesArr = array_slice($typesArr, $type_offset, $type_limit);
+
+        foreach ($typesArr as $str) {
+
+            $query = Vod::getDimensionQueryByListID($list_id, $mode, $str);
+            $total = $query->count();
+            $vods  = $query->limit($items_limit)->offset($items_offset)->get();
+
+            $vods   = ArrayHelper::toArray($vods);
+            $vods   = $this->setItemLink($vods);
+
+            $_meta  = [
+                'totalCount'  => $total,
+                'pageCount'   => ceil($total/$params['items_perpage']),
+                'currentPage' => $params['items_page'],
+                'perPage'     => $params['items_perpage']
+            ];
+
+            $params['field'] = 'hot';
+            $params['genre'] = $str;
+            $params['cid']   = $list_id;
+
+            $params = array_reverse($params);
+
+            $_links = $this->setLinks($_meta,'iptv/list', $params, 'items_page');
+
+            if ($total) {
+                $data[] = [
+                    'type'   => $str,
+                    'items'  => $vods,
+                    '_links' => $_links,
+                    '_meta'  => $_meta,
+                    'total'  => $total
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        array_multisort(array_column($data, 'total'),SORT_DESC, $data);
+
+        $finalData = [
+            'items'  => $data,
+            '_links' => $this->setLinks($type_meta,'iptv/hot', $type_params, 'type_page'),
+            '_meta'  => $type_meta
+        ];
+
+        return ['status' => true, 'data' => $finalData];
+    }
+
+    /**
+     * 获取分类下最热
+     * @return array
+     */
+    public function getByHot()
+    {
+        $type = $this->request->get('type', 'Movie');
+        // 计算type的offset
+        $type_params = $this->getTypeParams();
+        list($type_offset, $type_limit) = $this->getOffset($type_params['type_page'], $type_params['type_perpage']);
+
+        // 计算items的offset
+        $params = $this->getTypeItemParams();
+        list($items_offset, $items_limit) = $this->getOffset($params['items_page'], $params['items_perpage']);
+
+        // 根据type查找cid
+        $vods = VodList::findByDirName($type);
+
+        if (!$vods) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $list_id = $vods->list_id;
+        $typesArr = Vod::getAllTagByListID($list_id);
+
+        if (empty($typesArr)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $data       = [];
+        $type_meta  = [
+            'totalCount'  => count($typesArr),
+            'pageCount'   => ceil(count($typesArr)/$type_params['type_perpage']),
+            'currentPage' => $type_params['type_page'],
+            'perPage'     => $type_params['type_perpage']
+        ];
+        // 因为type 是存到一个字段里面的 所以要通过array_slice 达到'分页'效果
+        $typesArr = array_slice($typesArr, $type_offset, $type_limit);
+
+        foreach ($typesArr as $str) {
+            $query = Capsule::table('iptv_vod')
+                            ->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
+                            ->where('vod_type', 'like', "%$str%")
+                            ->where('vod_cid', '=', $list_id);
+
+            $total = $query->count();
+
+            $vods = $query->orderBy('vod_hits', 'desc')
+                          ->limit($items_limit)
+                          ->offset($items_offset)
+                          ->get();
+
+            $vods   = ArrayHelper::toArray($vods);
+            $vods   = $this->setItemLink($vods);
+
+            $_meta  = [
+                'totalCount'  => $total,
+                'pageCount'   => ceil($total/$params['items_perpage']),
+                'currentPage' => $params['items_page'],
+                'perPage'     => $params['items_perpage']
+            ];
+
+            $params['field'] = 'hot';
+            $params['genre'] = $str;
+            $params['cid']   = $list_id;
+
+            $params = array_reverse($params);
+
+            $_links = $this->setLinks($_meta,'iptv/list', $params, 'items_page');
+
+            if ($total) {
+                $data[] = [
+                    'type'   => $str,
+                    'items'  => $vods,
+                    '_links' => $_links,
+                    '_meta'  => $_meta,
+                    'total'  => $total
+                ];
+            }
+        }
+
+        if (empty($data)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        array_multisort(array_column($data, 'total'),SORT_DESC, $data);
+
+        $finalData = [
+            'items'  => $data,
+            '_links' => $this->setLinks($type_meta,'iptv/hot', $type_params, 'type_page'),
+            '_meta'  => $type_meta
+        ];
+
+        return ['status' => true, 'data' => $finalData];
+    }
+
+    private function getTypeParams()
+    {
+        // 计算type的offset
+        $type_params['type_perpage']  = $this->request->get('type_perpage', 6);
+        $type_params['type_page']     = $this->request->get('type_page', 1);
+
+        return $type_params;
+    }
+
+    private function getTypeItemParams()
+    {
+        $params['items_perpage'] = $this->request->get('items_perpage', 12);
+        $params['items_page']    = $this->request->get('items_page', 1);
+
+        return $params;
+    }
+
+    private function getOffset($page, $perpage)
+    {
+        $type_offset  = ($page - 1) * $perpage;
+        $type_limit   =  $perpage;
+
+        return [$type_offset, $type_limit];
+    }
+
+    public function getList()
+    {
+        $cid   = $this->request->get('cid');
+        $genre = $this->request->get('genre');
+        $field = $this->request->get('field', 'hot');
+        $params['items_perpage'] = $this->request->get('items_perpage', 12);
+        $params['items_page']    = $this->request->get('items_page', 1);
+        $items_offset = ($params['items_page'] - 1) * $params['items_perpage'];
+        $items_limit  = $params['items_perpage'];
+
+        $query = $query = Capsule::table('iptv_vod')
+                            ->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
+                            ->where('vod_cid', '=', $cid);
+
+        // 查询
+        switch ($field)
+        {
+            case 'hot':
+                $query->where('vod_type', 'like', "%$genre%")
+                      ->orderBy('vod_hits', 'desc');
+                break;
+            case 'type':
+                $query->where('vod_type', 'like', "%$genre%")
+                      ->orderBy('vod_year', 'desc');
+                break;
+            case 'language':
+            case 'area':
+            case 'year':
+                $query->where('vod_type', '=',$genre)
+                      ->orderBy('vod_year', 'desc');
+                break;
+        }
+
+
+        $total = $query->count();
+
+        $vods = $query->orderBy('vod_year', 'desc')
+                    ->limit($items_limit)
+                    ->offset($items_offset)
+                    ->get();
+
+        $vods   = ArrayHelper::toArray($vods);
+        $vods   = $this->setItemLink($vods);
+
+        $_meta  = [
+            'totalCount'  => $total,
+            'pageCount'   => ceil($total/$params['items_perpage']),
+            'currentPage' => $params['items_page'],
+            'perPage'     => $params['items_perpage']
+        ];
+
+        $params['cid']   = $cid;
+        $params['genre'] = $genre;
+        $params = array_reverse($params);
+
+        $_links = $this->setLinks($_meta,'iptv/hot/index', $params, 'items_page');
+        $data = [
+            'items'  => $vods,
+            '_links' => $_links,
+            '_meta'  => $_meta,
+        ];
+
+        return ['status' => true, 'data' => $data];
+    }
+
+    private function setItemLink($vods)
+    {
+        array_walk($vods, function(&$vod) {
+            $vod['_links'] = [
+                'self' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "vodLinks"])],
+                'groupLinks' => ['href' => Url::to("vods/{$vod['vod_id']}", ["expand" => "groupLinks"])],
+                'recommend' => ['href' => Url::to("recommends/{$vod['vod_id']}")]
+            ];
+        });
+
+        return $vods;
+    }
 
     public function getCondition()
     {
@@ -649,8 +918,6 @@ class iptvService extends common
 
          return ['status' => true, 'data' => $cacheData];
      }
-
-
 
     /**
      * 取卡拉ok

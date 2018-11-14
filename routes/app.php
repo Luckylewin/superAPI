@@ -169,8 +169,17 @@ Route::get('/types', 'App\Controller\IptvController@getType');
 //点播节目分页列表
 Route::get('/vods', 'App\Controller\IptvController@getVods');
 
+//点播分类栏目
+Route::get('/category', 'App\Controller\IptvController@getCategory');
+
 // 点播最热列表
-Route::get('/hot', 'App\Controller\IptvController@getHot');
+Route::get('/iptv/hot', 'App\Controller\IptvController@getByHot');
+Route::get('/iptv/type', 'App\Controller\IptvController@getByType');
+Route::get('/iptv/year', 'App\Controller\IptvController@getByYear');
+Route::get('/iptv/area', 'App\Controller\IptvController@getByArea');
+Route::get('/iptv/language', 'App\Controller\IptvController@getByLanguage');
+// 上述分页
+Route::get('/iptv/list', 'App\Controller\IptvController@getList');
 
 // 节目详细信息
 Route::get('/vods/{id}', 'App\Controller\IptvController@getVod');
