@@ -269,8 +269,6 @@ class iptvService extends common
              }
          }
 
-
-
          $vods = $query->offset($offset)->limit($per_page)->get();
 
          if (count($vods) <= 0) {
@@ -300,9 +298,79 @@ class iptvService extends common
          return ['status' => true, 'data' => $data];
      }
 
+     public function getYear()
+     {
+         $type = $this->request->get('type', 'Movie');
+
+         // 根据type查找cid
+         $vods = Capsule::table('iptv_list')
+                         ->select('list_id')
+                         ->where('list_dir', '=', $type)
+                         ->first();
+
+         if (is_null($vods)) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+     }
+
+    /**
+     * 获取分类下最热
+     * @return array
+     */
      public function getHot()
      {
-         $cid   = $this->request->get('cid')  ?? ($this->request->get('vod_cid') ?? '');
+         $type = $this->request->get('type', 'Movie');
+
+         // 根据type查找cid
+         $vods = Capsule::table('iptv_list')
+                         ->select('list_id')
+                         ->where('list_dir', '=', $type)
+                         ->first();
+
+         if (is_null($vods)) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+
+         $list_id = $vods->list_id;
+
+         //遍历查询
+         $types = Capsule::table('iptv_vod')->select('vod_type')->where('vod_cid', '=', $list_id)->distinct()->get();
+         $types = ArrayHelper::toArray($types);
+         $typesArr = [];
+         array_walk($types, function($v) use(&$typesArr) {
+              $typesArr = array_merge($typesArr, explode(',', $v['vod_type']));
+         });
+         $typesArr = array_unique($typesArr);
+
+         $data = [];
+         // 进行查询
+         if (!empty($typesArr)) {
+            foreach ($typesArr as $type) {
+                $vods = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
+                                                        ->where('vod_type', 'like', "%$type%")
+                                                        ->where('vod_cid', '=', $list_id)
+                                                        ->orderBy('vod_year', 'desc')
+                                                        ->get();
+
+                $vods  = ArrayHelper::toArray($vods);
+                $total = count($vods);
+
+                if ($total) {
+                    $data[] = [
+                        'type'  => $type,
+                        'items' => $vods,
+                        'total' => $total
+                    ];
+                }
+            }
+
+            array_multisort(array_column($data, 'total'),SORT_DESC, $data);
+         }
+         if (empty($data)) {
+             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+         }
+
+         return ['status' => true, 'data' => $data];
      }
 
     /**

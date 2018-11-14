@@ -125,4 +125,15 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
+    public function getHot()
+    {
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getHot();
+
+        if ($data['status'] === false) {
+            return Formatter::back('',$data['code']);
+        }
+
+        return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
+    }
 }

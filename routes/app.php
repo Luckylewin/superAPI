@@ -169,6 +169,9 @@ Route::get('/types', 'App\Controller\IptvController@getType');
 //点播节目分页列表
 Route::get('/vods', 'App\Controller\IptvController@getVods');
 
+// 点播最热列表
+Route::get('/hot', 'App\Controller\IptvController@getHot');
+
 // 节目详细信息
 Route::get('/vods/{id}', 'App\Controller\IptvController@getVod');
 
