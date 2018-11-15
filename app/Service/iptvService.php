@@ -492,6 +492,7 @@ class iptvService extends common
             $data[$item->field]['name']  = $item->name;
             $data[$item->field]['field'] = ucfirst($item->field);
             $data[$item->field]['image'] = !empty($item->image)? Func::getAccessUrl('287994000', $item->image, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
+            $data[$item->field]['image_hover'] = !empty($item->image_hover)? Func::getAccessUrl('287994000', $item->image, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
             $data[$item->field]['items'][] = ['name' => $item->itemName, 'zh_name' => $item->zh_name];
             $data[$item->field]['_links'] = [
                 'self' => Url::to('iptv/' . $item->field, ['type' => $type])
