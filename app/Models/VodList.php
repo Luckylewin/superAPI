@@ -20,6 +20,7 @@ class VodList
             ->orderBy('a.sort')
             ->leftJoin('iptv_type_item AS b', 'b.type_id', '=', 'a.id')
             ->where('b.exist_num', '>', 0)
+            ->where('b.is_show', '=', 1)
             ->get()
             ->toArray();
     }
