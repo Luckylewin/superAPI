@@ -212,11 +212,20 @@ class iptvService extends common
          $page     = $this->request->get('page') ?? 1;
 
 
+
          $query = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple']);
 
          // 分类ID
          if ($cid) {
              $query->where('vod_cid', '=', $cid);
+         } else{
+             $genre = $this->request->get('genre', 'Movie');
+             $vodList = VodList::findByDirName($genre);
+             if ($vodList === false) {
+                 return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+             }
+             
+             $query->where('vod_cid', '=', $vodList->id);
          }
 
          // 片名
