@@ -224,8 +224,8 @@ class iptvService extends common
              if ($vodList === false) {
                  return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
              }
-             
-             $query->where('vod_cid', '=', $vodList->id);
+
+             $query->where('vod_cid', '=', $vodList->list_id);
          }
 
          // 片名
