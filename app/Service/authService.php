@@ -29,13 +29,11 @@ class authService extends common
         $this->clientIP = $request->ip();
     }
 
-    public function login()
+    public function login(string $mac, int $timestamp, string $signature): array
     {
-        $this->uid = $this->request->post('mac');
-        $timestamp = $this->request->post('timestamp');
-        $signature = $this->request->post('signature');
+        $sn = $mac;
 
-        if (empty($this->uid) || empty($timestamp) || empty($signature)) {
+        if (empty($mac) || empty($timestamp) || empty($signature)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER_MISSING];
         }
 
@@ -48,19 +46,20 @@ class authService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_REQUEST];
         }
 
-        $serverSign = md5(md5($this->uid . $timestamp) . md5('topthinker' . $timestamp));
+        $serverSign = md5(md5($mac . $timestamp) . md5('topthinker' . $timestamp));
         if ($serverSign != $signature) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_SIGN];
         }
 
         try {
-            $macInfo = $this->_getMacInfo($this->uid, $this->uid);
+            $macInfo = $this->_getMacInfo($mac, $sn);
             $this->_checkIsExpire($macInfo);
             $this->_checkIsActive($macInfo);
-            $tokenData = $this->_generateToken($this->uid);
+            $tokenData = $this->_generateToken($mac);
 
-            $macInfo['access_token'] = $tokenData['token'];
+            $macInfo['access_token']        = $tokenData['token'];
             $macInfo['access_token_expire'] = $tokenData['expire'];
+
             $this->_updateInfo($macInfo);
 
             return ['status' => true, 'data' => $macInfo];
@@ -350,6 +349,7 @@ class authService extends common
             if (is_null($macInfo)) {
                 throw new \Exception("UID不存在",ErrorCode::$RES_ERROR_UID_NOT_EXIST);
             }
+
             $macInfo = ArrayHelper::toArray($macInfo);
             $cache->hmSet($MAC,$macInfo);
         }
@@ -370,7 +370,7 @@ class authService extends common
             //uid expired
             if (isset($flag) && isset($macInfo['MAC']) && isset($macInfo['SN'])) {
                 $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
-                $updateData = array('use_flag' => 2);
+                $updateData = ['use_flag' => 2];
                 $cache->hmSet($macInfo['MAC'],$updateData);
                 Capsule::table('mac')
                         ->where([
@@ -458,13 +458,12 @@ class authService extends common
      */
     private function _generateToken($MAC)
     {
-        $token = $this->_generateAccessToken($MAC);
+        $token       = $this->_generateAccessToken($MAC);
         $login_token = $this->_generateLoginToken($MAC);
 
-        //echo "服务器响应：token:{$token['token']}",PHP_EOL;
         return [
-            'token' => $token['token'],
-            'expire' => $token['expire'],
+            'token'       => $token['token'],
+            'expire'      => $token['expire'],
             'login_token' => $login_token,
         ];
     }

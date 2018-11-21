@@ -10,6 +10,7 @@ namespace App\Controller;
 
 use App\Components\http\Formatter;
 use App\Components\pay\DokyPay;
+use App\Models\KaraokeSearcher;
 use App\Service\appService;
 use App\Service\authService;
 use App\Service\firmwareService;
@@ -193,8 +194,16 @@ class OttController extends BaseController
     // 卡拉ok列表
     public function getKaraokeList()
     {
+        $searcher = new KaraokeSearcher();
+        $searcher->name = $this->request->post('name', false);
+        $searcher->lang = $this->request->post('lang', false);
+        $searcher->tags = $this->request->post('tags', false);
+        $searcher->sort = $this->request->post('sort', 'update_time:asc');
+        $searcher->page = $this->request->post('page', '1');
+        $searcher->perPage = $this->request->post('perPage', 10);
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getKaraokeList();
+        $data = $iptvService->getKaraokeList($searcher);
         if ($data['status'] === false) {
             return Formatter::response($data['code']);
         }
@@ -208,8 +217,9 @@ class OttController extends BaseController
      */
     public function getKaraoke()
     {
+        $url = $this->request->post('url', null);
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getKaraoke();
+        $data = $iptvService->getKaraoke($url);
         if ($data['status'] === false) {
             return Formatter::response($data['code']);
         }

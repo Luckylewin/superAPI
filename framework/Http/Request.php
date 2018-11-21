@@ -111,6 +111,11 @@ class Request
         $this->_server->REQUEST_URI = $uri;
     }
 
+    /**
+     * @param null $key
+     * @param null $default
+     * @return null|object|integer|string
+     */
     public function post($key = null, $default = null)
     {
         if (is_null($key)) {
