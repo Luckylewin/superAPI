@@ -21,7 +21,7 @@ class IptvController extends BaseController
      * 登录认证
      * @return array
      */
-    public function auth(): array
+    public function auth()
     {
         $mac       = $this->request->post('mac');
         $timestamp = $this->request->post('timestamp');
