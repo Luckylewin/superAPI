@@ -13,7 +13,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class MemberService extends common
 {
-    public function getPrice()
+    public function getPrice(): array
     {
        $price = Capsule::table('ott_price_list')->get()->toArray();
 

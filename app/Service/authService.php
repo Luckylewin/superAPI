@@ -12,6 +12,7 @@ use App\Components\cache\Redis;
 use App\Components\encrypt\AES;
 use App\Components\helper\ArrayHelper;
 use App\Exceptions\ErrorCode;
+use App\Models\Mac;
 use Breeze\Http\Request;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -69,38 +70,24 @@ class authService extends common
         }
     }
 
-
     /**
      * 获取令牌
+     * @param $time
+     * @param $sign
      * @return array
      */
-    public function getClientToken()
+    public function getClientToken($time, $sign)
     {
-        $data = $this->data;
-        $uid = $this->uid;
-
+        $uid  = $this->uid;
         try {
-            //检查参数
-            $decryptStr = $this->_checkParams($uid, $data);
-
-            $login_token = isset($data['login_token']) && !empty($data['login_token']) ? $data['login_token'] : null;
-
-            //检查token是否需要重新生成
-            if ($token = $this->_checkTokenUpdate($uid,$login_token)) {
-                return ['status' => true, 'data' => $token];
-            }
-
-            //从redis/mysql中获取用户数据
-            $SN = $this->_getSN($decryptStr);
-
-            $macInfo = $this->_getMacInfo($uid, $SN);
-            //检查用户是否过期
+            // 解密
+            $decryptStr = $this->validateSign($uid, $time, $sign);
+            $macInfo    = $this->_getMacInfo($uid, $this->getSN($decryptStr));
             $this->_checkIsExpire($macInfo);
-            //检查用户是否激活
             $this->_checkIsActive($macInfo);
-            // 生成token
             $tokenData = $this->_generateToken($uid);
-            $macInfo['access_token'] = $tokenData['token'];
+
+            $macInfo['access_token']        = $tokenData['token'];
             $macInfo['access_token_expire'] = $tokenData['expire'];
 
             //更新用户登录信息
@@ -270,28 +257,20 @@ class authService extends common
     /**
      * 检测参数
      * @param $uid
-     * @param $data
+     * @param $time
+     * @param $sign
      * @return String
      * @throws \Exception
      */
-    private function _checkParams($uid,$data)
+    private function validateSign($uid, $time, $sign)
     {
-        $MAC = $this->formatMac($uid);
-        $time = $data['time'] ?? '';
-
-        $currentTime = time();
-        $encryptStr = $data['sign'] ?? '';
-
-        if (empty($time) || empty($encryptStr)) {
+        $MAC  = $this->formatMac($uid);
+        if (empty($time) || empty($sign)) {
             throw new \Exception("参数不全",ErrorCode::$RES_ERROR_INVALID_SIGN);
         }
 
-        if ($currentTime + 5 < $time || $currentTime - $time > 3600) {
-            //throw new \Exception("请求时间超时",$this->view->RES_ERROR_TIMESTAMP);
-        }
-
         AES::setKEY(substr(md5($MAC . $time . AES::$_KEY),0,16));
-        $decryptStr = AES::decrypt($encryptStr);
+        $decryptStr = AES::decrypt($sign);
 
         if (strpos($decryptStr,'-') == false) {
             throw new \Exception("错误的签名",ErrorCode::$RES_ERROR_INVALID_SIGN);
@@ -305,23 +284,10 @@ class authService extends common
      * @param $string
      * @return mixed
      */
-    private function _getSN($string)
+    private function getSN($string)
     {
         $MAC_SN = explode('-',$string);
         return $SN = $MAC_SN[1];
-    }
-
-
-    /**
-     *  判断Token是否需要重新生成
-     * @param $MAC
-     * @param $login_token
-     * @return bool|string
-     */
-    private function _checkTokenUpdate($MAC,$login_token)
-    {
-        return false;
-
     }
 
     /**
@@ -363,14 +329,19 @@ class authService extends common
      * @return bool
      * @throws \Exception
      */
-    private function _checkIsExpire($macInfo)
+    private function _checkIsExpire($macInfo): bool
     {
         //判断mac是否过期
-        if ($macInfo['use_flag'] == 2 || ( isset($macInfo['duetime']) && $macInfo['duetime'] != '0000-00-00 00:00:00'  && (strtotime(date('Y-m-d')) >= strtotime($macInfo['duetime'])) && $flag=true) ) {
+        if ($macInfo['use_flag'] == Mac::START_NORMAL || (
+                isset($macInfo['duetime']) &&
+                $macInfo['duetime'] != '0000-00-00 00:00:00'  &&
+                strtotime(date('Y-m-d')) >= strtotime($macInfo['duetime'])) &&
+                $flag = true
+        ) {
             //uid expired
             if (isset($flag) && isset($macInfo['MAC']) && isset($macInfo['SN'])) {
                 $cache = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
-                $updateData = ['use_flag' => 2];
+                $updateData = ['use_flag' => Mac::START_NORMAL];
                 $cache->hmSet($macInfo['MAC'],$updateData);
                 Capsule::table('mac')
                         ->where([

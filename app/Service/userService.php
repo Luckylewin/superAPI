@@ -19,11 +19,11 @@ class userService extends common
      * 获取MAC地址过期时间
      * @return mixed
      */
-    public function getMacExpireTime()
+    public function getMacExpireTime(): array
     {
-        $uid = $this->uid;
+        $uid   = $this->uid;
         $redis = $this->getRedis(Redis::$REDIS_DEVICE_STATUS);
-        $user = $redis->hGet($uid,'data');
+        $user  = $redis->hGet($uid,'data');
 
         if ($user) {
             $user = json_decode($user,true);
@@ -52,21 +52,18 @@ class userService extends common
 
     /**
      * DVB 注册
+     * @param $sign
+     * @param $sn
      * @return array
-     * @throws
      */
-    public function signup()
+    public function signup($sign, $sn): array
     {
-        //签名
-        $sign = $this->post('sign');
-        $SN = $this->post('sn');
         $MAC = $this->uid;
-
         $KEY = "topthinker-topertv";
 
         //校验签名
-        AES::setKEY(substr(md5($MAC.$KEY.$SN),0,16));
-        $Encrypt = AES::encrypt($MAC .'|'. $SN);
+        AES::setKEY(substr(md5($MAC.$KEY.$sn),0,16));
+        $Encrypt = AES::encrypt($MAC .'|'. $sn);
 
         if ($sign !== $Encrypt) {
             $this->stdout("错误的签名", "ERROR");
@@ -78,7 +75,7 @@ class userService extends common
                             ->first();
 
         if (is_null($user)) {
-            $macData = array('MAC' => $MAC,'SN' => $SN, 'use_flag' => 0,'regtime' => date('Y-m-d H:i:s',time()),'contract_time'=>'10 year');
+            $macData = array('MAC' => $MAC,'SN' => $sn, 'use_flag' => 0,'regtime' => date('Y-m-d H:i:s',time()),'contract_time'=>'10 year');
             Capsule::table('mac')->insert($macData);
             return ["status" => true, 'data' => 'register success'];
         } else {
@@ -88,17 +85,11 @@ class userService extends common
 
     }
 
-
-    public function getInfo()
-    {
-        $from = $this->post('from', 'box');
-        return $from == 'box' ? $this->getInfoFromBox() : $this->getInfoFromPhone();
-    }
-
     /**
      * 获取用户信息 (盒子)
+     * @return array
      */
-    public function getInfoFromBox()
+    public function getInfoFromBox(): array
     {
         $data = Capsule::table('mac')
                         ->where('MAC', '=', $this->uid)
@@ -127,7 +118,7 @@ class userService extends common
     /**
      * 获取用户信息（手机）
      */
-    public function getInfoFromPhone()
+    public function getInfoFromPhone(): array
     {
         $data = Capsule::table('yii2_user')
                          ->where('username', '=', $this->uid)

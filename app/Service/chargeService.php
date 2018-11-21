@@ -21,10 +21,8 @@ class chargeService extends common
      * @return mixed
      * @throws
      */
-    public function getOttPriceList()
+    public function getOttPriceList($lang): array
     {
-       $lang = $this->post('lang', 'en_US');
-
        $data = Capsule::table('ott_price_list')
                         ->where('type', '=', 'ott')
                         ->orderBy('value','asc')
@@ -57,19 +55,8 @@ class chargeService extends common
     }
 
     // 生成开通分类观看服务订单
-    public function openService()
+    public function openService($genre, $type, $sign, $timestamp): array
     {
-        try {
-            // 查找分类价格
-            $genre = $this->post('genre');
-            $type = $this->post('type', 1, ['in', [1,3,6,12]]);
-            $timestamp = $this->post('timestamp');
-            $sign = $this->post('sign');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $serverSign = md5($timestamp . 'topthinker');
         if ($sign != $serverSign) {
             $this->stdout("错误的签名", "ERROR");
@@ -219,14 +206,12 @@ class chargeService extends common
     }
 
     /**
-     * 续费卡
+     * 续费卡充值续费
+     * @param $cardSecret
      * @return array
-     * @throws
      */
-    public function renew()
+    public function renew($cardSecret): array
     {
-        $cardSecret = $this->post('card_secret', null, ['string']);
-
         $card = Capsule::table('sys_renewal_card')
                          ->select(['card_num','is_valid','is_del','card_contracttime'])
                          ->where('card_secret',"=", $cardSecret)

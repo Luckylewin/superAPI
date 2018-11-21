@@ -11,6 +11,8 @@ namespace App\Models;
 
 class Mac
 {
+    const START_NORMAL = 2;
+
     public static function findOne($where)
     {
 

@@ -17,23 +17,17 @@ class firmwareService extends common
 {
     /**
      * 绑定订单号的 dvb固件升级
+     * @param $order_id
+     * @param $clientVersion
      * @param string $type
      * @return array
-     *
      */
-    public function getFirmware($type = "dvb")
+    public function getFirmware($order_id, $clientVersion, $type = "dvb"): array
     {
-        try {
-            $orderId = $this->post('order_id', null, ['string']);
-            $clientVersion = $this->post('version', 0);
-        } catch (\InvalidArgumentException $e) {
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $firmwareIndex = Capsule::table('dvb_order as a')
                                  ->select('b.ID as fid')
                                  ->leftJoin('firmware_class AS b','a.id','=', 'b.order_id')
-                                 ->where("order_num", "=",$orderId)
+                                 ->where("order_num", "=", $order_id)
                                  ->first();
 
         if (is_null($firmwareIndex)) {

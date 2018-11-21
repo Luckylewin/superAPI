@@ -19,7 +19,7 @@ use App\Exceptions\ErrorCode;
  */
 class MemberController extends BaseController
 {
-    public function getPrice()
+    public function getPrice(): array
     {
         $iptvService = new MemberService($this->request);
         $data = $iptvService->getPrice();

@@ -18,15 +18,8 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class payService extends common
 {
-    public function pay()
+    public function pay($order_sign, $payType): array
     {
-        try {
-            $order_sign = $this->post('order_sign');
-            $payType = $this->post('pay_type', 'dokypay', ['in', ['dokypay', 'paypal']]);
-        } catch (\Exception $e) {
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $order = Capsule::table('iptv_order')
                             ->where('order_sign', '=', $order_sign)
                             ->first();
@@ -280,14 +273,8 @@ HTML;
         return $doc;
     }
 
-    public function getOrderInfo()
+    public function getOrderInfo($order_sign): array
     {
-        try {
-            $order_sign = $this->post('order_sign');
-        } catch (\Exception $e) {
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $order = Capsule::table('iptv_order')
                          ->where('order_sign', '=', $order_sign)
                          ->first();

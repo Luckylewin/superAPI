@@ -21,7 +21,10 @@ class PayController extends BaseController
     // 支付接口
     public function pay()
     {
-        $data = (new payService($this->request))->pay();
+        $order_sign = $this->request->post('order_sign');
+        $payType    = $this->request->post('pay_type', 'dokypay');
+
+        $data = (new payService($this->request))->pay($order_sign, $payType);
 
         if ($data['status'] === false) {
             return Formatter::response($data['code']);
@@ -69,9 +72,10 @@ class PayController extends BaseController
         return (new payService($request))->paypalNotify($request, false);
     }
 
-    public function getOrderStatus()
+    public function getOrderStatus(): array
     {
-        $data = (new payService($this->request))->getOrderInfo();
+        $order_sign = $this->request->post('order_sign');
+        $data = (new payService($this->request))->getOrderInfo($order_sign);
         if ($data['status'] === false) {
             return Formatter::response($data['code']);
         }

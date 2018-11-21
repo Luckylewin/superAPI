@@ -26,7 +26,7 @@ class ottService extends common
      * @return array
      * @throws
      */
-    public function getRecommend()
+    public function getRecommend(): array
     {
         $version = $this->post('version', 0);
         
@@ -54,9 +54,9 @@ class ottService extends common
 
     /**
      * 首页banner数据
-     * @return bool|mixed|string
+     * @return array
      */
-    public function getBanners()
+    public function getBanners(): array
     {
         $cacheKey = 'OTT_BANNERS';
         $redisDB = Redis::$REDIS_PROTOCOL;
@@ -84,15 +84,14 @@ class ottService extends common
     }
 
     /**
-     * 获取未来最近的比赛 单位小时
+     * @param $language
+     * @param $timezone
+     * @param $hour
+     * @param $prev
+     * @return array
      */
-    public function getRecentEvent()
+    public function getRecentEvent($language, $timezone, $hour, $prev): array
     {
-        $prev = $this->post('prev', 6, ['integer','min'=>'1','max'=>12]);
-        $hour = $this->post('hour', 24, ['integer']);
-        $language = $this->post('lang', 'en');
-        $timezone = $this->post('timezone', '+8');
-
         $language = strtolower($language);
         $during = $this->getDuringHour($timezone, $hour);
 
@@ -100,7 +99,6 @@ class ottService extends common
         $data = $this->majorEventForHour($language, $timezone, $during['start'], $during['end']);
 
         if (empty($data)) {
-            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -108,23 +106,16 @@ class ottService extends common
     }
 
     /**
-     *  获取主要赛事
+     * 获取主要赛事
+     * @param $day
+     * @param $language
+     * @param $timezone
+     * @return array
      */
-    public function getMajorEvent()
+    public function getMajorEvent($day, $language, $timezone): array
     {
-        try {
-            $day = $this->post('day', 7, ['integer','min'=>1,'max' => 7]);
-            $language = $this->post('lang', 'en');
-            $timezone = $this->post('timezone', '+8');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $language = strtolower($language);
-
         $during = $this->getDuring($timezone, $day);
-
         $responseDataList = [];
         foreach ($during as $date) {
             $data = $this->majorEventForDay($language, $timezone, $date['start'], $date['end']);
@@ -135,7 +126,6 @@ class ottService extends common
 
         //按天进行分组
         if (empty($responseDataList)) {
-            $this->stdout('没有数据', 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -151,7 +141,7 @@ class ottService extends common
      * @param $end_time integer
      * @return bool
      */
-    public function majorEventForDay($language, $timezone, $start_time, $end_time)
+    protected function majorEventForDay($language, $timezone, $start_time, $end_time)
     {
         //查数据库
         $data = $this->getMajorEventByTime($start_time, $end_time);
@@ -348,9 +338,9 @@ class ottService extends common
 
     /**
      * 取一级分类列表
-     * @return bool|mixed|string
+     * @return array
      */
-    public function getMainClass()
+    public function getMainClass(): array
     {
         $cacheKey = 'OTT_CLASSIFICATION';
         $cacheValue = $this->getDataFromCache($cacheKey, Redis::$REDIS_PROTOCOL);
@@ -398,33 +388,59 @@ class ottService extends common
         return ['status' => true, 'data' => $response];
     }
 
-
     /**
      * 获取节目列表
+     * @param $genre
+     * @param $version
+     * @param $scheme
+     * @param $format
+     * @param $access_key
+     * @return array
      */
-    public function getList()
+    public function getList($genre, $version, $scheme, $format, $access_key): array
     {
-        try {
-            $version = str_replace('_', '.', $this->post('ver', 0));
-            $scheme = $this->post('scheme', 'ALL');
-            $format = strtoupper($this->post('format', 'XML'));
-            $country = $this->post('country', '');
-            $type = $this->post('type', '');
-            $genre = $country ? $country : $type;
-            $access_key = $this->post('access_key', '');
-
-        }catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $access = $this->judgeAccess($genre,$access_key);
 
         if ($access['status'] === false) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PERMISSION_DENY];
         }
-        
-        return $this->getEncryptList($genre, $scheme, $version, $format);
+
+        $cache = Redis::singleton();
+        $cache->getRedis()->select(Redis::$REDIS_PROTOCOL);
+
+        //判断版本是否需要下发列表
+        $cacheVersion = $cache->get(self::getVersion($genre, $scheme, $format));
+        if ($cacheVersion == false) {
+            $cacheVersion = $cache->get(self::getVersion($genre, 'ALL', $format));
+        }
+
+        if ($cacheVersion && $version >= $cacheVersion) {
+            $this->stdout("无需更新", 'INFO');
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
+        }
+
+        if ($list = $cache->get(self::getKey($genre, $scheme, true))) {
+            return ['status' => true, 'data' => $list];
+        }
+
+        if ($format == 'XML') {
+            $data = $this->EncryptXML(self::getKey($genre, $scheme, $format));
+            if (empty($data)) {
+                $data = $this->EncryptXML(self::getKey($genre, 'ALL', $format));
+            }
+        } else {
+            $data = $this->encryptJson(self::getKey($genre, $scheme, $format));
+            if (empty($data)) {
+                $data = $this->encryptJson(self::getKey($genre, 'ALL', $format));
+            }
+        }
+
+        if (empty($data)) {
+            $this->stdout("没有数据", 'ERROR');
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        return ['status' => true, 'data' => $data];
     }
 
     /**
@@ -618,17 +634,11 @@ class ottService extends common
 
     /**
      * 获取正则列表
+     * @param $version
      * @return array
      */
-    public function getRegex()
+    public function getRegex($version): array
     {
-        try {
-            $version = $this->post('version', 0);
-        }catch (\Exception $e) {
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
-
         //查缓存
         $cacheKey = "resolve_list";
         $redisDB = Redis::$REDIS_PROTOCOL;
@@ -652,33 +662,24 @@ class ottService extends common
         $data = ArrayHelper::toArray($data);
 
         if (empty($data)) {
-            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
         foreach ($data as $key => $value) {
-            $value['c'] = json_decode($data[$key]['c'], true);
+            $value['c']       = json_decode($data[$key]['c'], true);
             $value['android'] = json_decode($data[$key]['android'], true);
         }
 
         $response['version'] = date('YmdHis');
         $response['data'] = $data;
-
         $this->getRedis($redisDB)->set($cacheKey, json_encode($response));
 
         return ['status' => true, 'data' => $response];
     }
 
     // 获取全部的预告数据
-    public function getEPG()
+    public function getEPG($genre, $version): array
     {
-        try {
-            $version = $this->post('version', 0);
-            $genre = $this->post('genre', null, ['string']);
-        } catch (\Exception $e) {
-            return ['status' => true, 'code' => ErrorCode::$RES_ERROR_PARAMETER];
-        }
-
         $redisKey = "ALL_" . strtoupper($genre) . "_PARADE_LIST";
         $redisDB = Redis::$REDIS_EPG;
         $cache = $this->getDataFromCache($redisKey, $redisDB);
@@ -848,19 +849,13 @@ class ottService extends common
 
     /**
      * 获取预告列表
+     * @param $name
+     * @param $day
+     * @param $timezone
      * @return array
      */
-    public function getParadeList()
+    public function getParadeList($name, $day, $timezone): array
     {
-        try {
-            $timezone = $this->post('timezone', '+8');
-            $name = $this->post('name',null, ['required']);
-            $day = $this->post('day', 1, ['integer', 'min'=>1, 'max'=>7]);
-        } catch (\Exception $e) {
-            $this->stdout("没有数据", 'ERROR');
-            return ['status' => false, 'code' => $e->getCode() ];
-        }
-
         $responseData = $this->_getParadeByName($name, $day, $timezone);
 
         if ($responseData == false) {
@@ -1095,42 +1090,9 @@ class ottService extends common
      * @param $format
      * @return array
      */
-    private function getEncryptList($class, $scheme, $version, $format)
+    private function getEncryptList($class, $scheme, $version, $format):array
     {
-        $cache = Redis::singleton();
-        $cache->getRedis()->select(Redis::$REDIS_PROTOCOL);
 
-        //判断版本是否需要下发列表
-        $cacheVersion = $cache->get(self::getVersion($class, $scheme, $format));
-        if ($cacheVersion == false) {
-            $cacheVersion = $cache->get(self::getVersion($class, 'ALL', $format));
-        }
-
-        if ($cacheVersion && $version >= $cacheVersion) {
-            $this->stdout("无需更新", 'INFO');
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_NEED_UPDATE];
-        }
-
-        if ($list = $cache->get(self::getKey($class, $scheme, true))) {
-            return ['status' => true, 'data' => $list];
-        }
-
-        $data =  $format == 'XML' ? $this->EncryptXML(self::getKey($class, $scheme, $format)) :
-            $this->encryptJson(self::getKey($class, $scheme, $format));
-
-        if (!empty($data)) {
-           return ['status' => true, 'data' => $data];
-        }
-
-        $data =  $format == 'XML' ? $this->EncryptXML(self::getKey($class, 'ALL', $format)) :
-            $this->encryptJson(self::getKey($class, 'ALL', $format));
-
-        if (empty($data)) {
-            $this->stdout("没有数据", 'ERROR');
-            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
-        }
-
-        return ['status' => true, 'data' => $data];
     }
 
     /**
@@ -1172,17 +1134,11 @@ class ottService extends common
 
     /**
      * 获取频道图标
+     * @param $name
      * @return array
      */
-    public function getChannelIcon()
+    public function getChannelIcon($name): array
     {
-        try {
-            $name = $this->post('name');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $channel = Capsule::table('ott_channel')
                             ->where('name' ,'=', $name)
                             ->first();
@@ -1200,16 +1156,12 @@ class ottService extends common
         ];
     }
 
-
-    public function getGenre()
+    /**
+     * @param $name
+     * @return array
+     */
+    public function getGenre($name):array
     {
-        try {
-            $name = $this->post('name');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         // 读取数据库
         $mainClass = Capsule::table('ott_main_class')
                     ->where([['use_flag', '=', 1],['name' ,'=', $name]])
@@ -1249,19 +1201,14 @@ class ottService extends common
         return ['status' => true, 'data' => $mainClass];
     }
 
-    // 获取使用状态
-    public function getGenreUsageInfo()
+    /**
+     * 获取分类状态
+     * @param $genre
+     * @param $access_key
+     * @return array
+     */
+    public function getGenreUsageInfo($genre, $access_key): array
     {
-        try {
-            $genre = $this->post('genre');
-            $access_key = $this->post('access_key', '');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
-
-
         $mainClass = Capsule::table('ott_main_class')
                             ->where([
                                 ['use_flag', '=', 1],
@@ -1317,16 +1264,8 @@ class ottService extends common
         return ['status' => true, 'data' => $mainClass];
     }
 
-    public function getGenrePrice()
+    public function getGenrePrice($genre, $lang): array
     {
-        try {
-            $genre = $this->post('genre');
-            $lang = $this->post('lang', 'en_US');
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $languageOptions = [
             'en_US' => ['1 month', '3 month', '6 month', '1 year'],
             'zh_CN' => ['1个月', '3个月', '6个月', '1年'],
@@ -1376,20 +1315,17 @@ class ottService extends common
         return ['status' => true, 'data' => $data];
     }
 
-    // 给分类进行激活操作
-    public function activateGenre()
+    /**
+     * 给分类进行激活操作
+     * @param $genre
+     * @param $cardSecret
+     * @param $sign
+     * @param $timestamp
+     * @return array
+     */
+    public function activateGenre($genre, $cardSecret, $sign, $timestamp): array
     {
-        try {
-            $genre = $this->post('genre');
-            $cardSecret = $this->post('card_secret', null, ['string']);
-            $sign = $this->post('sign');
-            $timestamp = $this->post('timestamp');
-            $serverSign = md5(md5($timestamp . 'topthinker' . $cardSecret));
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
+        $serverSign = md5(md5($timestamp . 'topthinker' . $cardSecret));
         if ($serverSign != $sign) {
             $this->stdout("签名错误", 'ERROR');
             return ['status' => false, 'code' =>ErrorCode::$RES_ERROR_INVALID_SIGN];
@@ -1476,7 +1412,7 @@ class ottService extends common
     }
 
     // 隐藏内容锁状态
-    public function getLockStatus()
+    public function getLockStatus(): array
     {
         $mac = Capsule::table('mac')
                         ->select('is_hide')
@@ -1491,7 +1427,7 @@ class ottService extends common
     }
 
     // 解锁内容
-    public function relieveLock()
+    public function relieveLock(): array
     {
         $mac = Capsule::table('mac')
                         ->where('mac' ,'=', $this->uid)

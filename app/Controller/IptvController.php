@@ -19,9 +19,9 @@ class IptvController extends BaseController
 {
     /**
      * 登录认证
-     * @return string
+     * @return array
      */
-    public function auth()
+    public function auth(): array
     {
         $mac       = $this->request->post('mac');
         $timestamp = $this->request->post('timestamp');
@@ -40,7 +40,7 @@ class IptvController extends BaseController
      * 获取 banner 图
      * @return mixed
      */
-    public function getBanner()
+    public function getBanner(): array
     {
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getBanner();
@@ -55,11 +55,11 @@ class IptvController extends BaseController
      * 获取提供搜索的字段以及值
      * @return mixed
      */
-    public function getType()
+    public function getType(): array
     {
-        $iptvService = new iptvService($this->request);
         $expand = $this->request->get('expand');
-        $data   = $iptvService->getType($expand);
+        $iptvService = new iptvService($this->request);
+        $data = $iptvService->getType($expand);
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
         }
@@ -67,7 +67,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getVods()
+    public function getVods(): array
     {
         $searcher = new VodSearcher();
         $searcher->cid      = $this->request->get('cid')  ?? ($this->request->get('vod_cid') ?? false);
@@ -88,7 +88,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getVod($id)
+    public function getVod($id): array
     {
         $expand = $this->request->get('expand', false);
         $iptvService = new iptvService($this->request);
@@ -100,7 +100,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getVodLinks($vod_id)
+    public function getVodLinks($vod_id): array
     {
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getVodLinks($vod_id);
@@ -111,7 +111,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getRecommends($id)
+    public function getRecommends($id): array
     {
         $num = $this->request->get('num', 4);
         $iptvService = new iptvService($this->request);
@@ -123,7 +123,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function vodHome()
+    public function vodHome(): array
     {
         $iptvService = new iptvService($this->request);
         $data = $iptvService->vodHome();
@@ -134,7 +134,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getCondition()
+    public function getCondition(): array
     {
         $list_id = $this->request->get('vod_id');
         $iptvService = new iptvService($this->request);
@@ -146,7 +146,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getLink($id)
+    public function getLink($id): array
     {
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getLink($id);
@@ -157,7 +157,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getCategory()
+    public function getCategory(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -170,7 +170,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getByHot()
+    public function getByHot(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -183,7 +183,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getByType()
+    public function getByType(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -196,7 +196,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getByYear()
+    public function getByYear(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -209,7 +209,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getByArea()
+    public function getByArea(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -222,7 +222,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getByLanguage()
+    public function getByLanguage(): array
     {
         $type = $this->request->get('type', 'Movie');
         $iptvService = new iptvService($this->request);
@@ -235,7 +235,7 @@ class IptvController extends BaseController
         return Formatter::back($data['data'], ErrorCode::$RES_SUCCESS);
     }
 
-    public function getList()
+    public function getList(): array
     {
         $ListSearcher = new ListSearcher();
         $ListSearcher->cid   = $this->request->get('cid');

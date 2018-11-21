@@ -18,28 +18,16 @@ class appService extends common
 {
     /**
      * 获取App市场列表
+     * @param $time
+     * @param $sign
+     * @param $scheme
+     * @param $page
+     * @param $limit
      * @return array
      */
-    public function getAppMarket()
+    public function getAppMarket($time, $sign, $scheme, $page, $limit):array
     {
-        //验证token
-        try {
-            $sign = $this->post('sign');
-            $time = $this->post('time');
-            $scheme = $this->post('scheme', 'all');
-            $page = $this->post('page', 1);
-            $limit = $this->post('per_page', 10, ['integer' ,'min'=>5,'max'=>100]);
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $serverSign = md5(md5('topthinker'.$time.$this->uid));
-
-        if ($sign != $serverSign) {
-            // return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA]
-        }
-
         $offset = $limit * ($page-1);
         $where = [];
 
@@ -98,41 +86,32 @@ class appService extends common
         }
 
         $market['scheme'] = ":" . $scheme->schemeName;
-        $market['total'] = $total;
+        $market['total']  = $total;
         $market['totalPage'] = ceil($total/$limit);
-        $market['page'] = $page;
-        $market['apps'] = $data;
+        $market['page']   = $page;
+        $market['apps']   = $data;
 
         return ['status' => true, 'data' => $market];
     }
 
     /**
      * APP市场获取某个App
+     * @param $appId
+     * @param $time
+     * @param $sign
      * @return array
      */
-    public function getConcreteApp()
+    public function getConcreteApp($appId, $time, $sign): array
     {
-        try {
-            $sign = $this->post('sign');
-            $time = $this->post('time');
-            $appId = $this->post('appid');
-        } catch (\Exception $e) {
-            return ['status' => true, 'code' => $e->getCode()];
-        }
-
         $ServerSign = md5(md5('topthinker'. $time . $this->uid));
 
         if (empty($sign) || empty($time) || $sign != $ServerSign) {
-            $this->stdout("签名错误", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_SIGNATURE];
         }
 
-        $app = Capsule::table('apk_detail')
-                            ->where('ID','=', $appId)
-                            ->first();
+        $app = Capsule::table('apk_detail')->where('ID','=', $appId)->first();
 
         if (is_null($app) || !isset($app->url)) {
-            $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
@@ -158,23 +137,12 @@ class appService extends common
 
     /**
      * App 更新
+     * @param $type
+     * @param $ver
      * @return array
      */
-    public function updateApp()
+    public function updateApp($type, $ver): array
     {
-        try {
-            if ($this->request->isGet) {
-                $ver = $this->request->get('ver', 0);
-                $type = $this->request->get('type');
-            } else {
-                $ver = $this->post('ver', 0);
-                $type = $this->post('type');
-            }
-        } catch (\Exception $e) {
-            $this->stdout($e->getMessage(), 'ERROR');
-            return ['status' => false, 'code' => $e->getCode()];
-        }
-
         $ver = str_replace('_', '.', $ver);
 
         $newestApp = $this->getLastApp($type);
@@ -254,7 +222,7 @@ class appService extends common
      * 获取APP进入图片
      * @return mixed
      */
-    public function getBootPic()
+    public function getBootPic(): array
     {
         $data = Capsule::table('app_boot_picture')
                          ->where('status', '=', '1')
