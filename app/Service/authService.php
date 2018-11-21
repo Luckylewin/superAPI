@@ -109,7 +109,7 @@ class authService extends common
      * @param $token
      * @return array
      */
-    public function validateTokenViaYii($uid, $token)
+    public function validateTokenViaYii($uid, $token): array
     {
        $user =  Capsule::table('yii2_user')
                             ->where('username','=', $uid)
@@ -140,7 +140,7 @@ class authService extends common
      * @param bool $mode
      * @return array
      */
-    public function validateToken($MAC,$Token,$mode=false)
+    public function validateToken($MAC,$Token,$mode=false): array
     {
         $cache = Redis::singleton();
         $cache->getRedis()->select(Redis::$REDIS_DEVICE_STATUS);

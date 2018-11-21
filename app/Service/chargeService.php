@@ -18,8 +18,8 @@ class chargeService extends common
 
     /**
      * 获取价目表
-     * @return mixed
-     * @throws
+     * @param $lang
+     * @return array
      */
     public function getOttPriceList($lang): array
     {

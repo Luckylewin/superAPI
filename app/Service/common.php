@@ -63,26 +63,10 @@ class common
         return null;
     }
 
-    //计算总页数
-    public static function getTotalPage($perPage, $totalPage)
-    {
-        if (!$totalPage) {
-            return 0;
-        }
-        if ($perPage <= 0 || !is_numeric($perPage)) {
-            $perPage = 10;
-        }
-        return ceil( (int)$totalPage / (int)$perPage);
-    }
 
     public function formatMac($uid)
     {
         return str_replace(':', '', $uid);
-    }
-
-    public function checkMac($uid)
-    {
-        return true;
     }
 
     public function getRedis($db = null)
@@ -139,10 +123,9 @@ class common
         $res = strnatcmp($serverVersion,$clientVersion);
         if ($res == 1) {
             return true;
-        }else{
+        } else{
             return false;
         }
-
     }
 
     /**
