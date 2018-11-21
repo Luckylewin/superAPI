@@ -91,7 +91,7 @@ Route::group(['middleware' => 'json'], function() {
     Route::post('/pay', 'App\Controller\PayController@pay');
 
 // 查询订单接口
-    Route::post('/getOrderStatus', 'App\Controller\OttController@getOrderStatus');
+    Route::post('/getOrderStatus', 'App\Controller\PayController@getOrderStatus');
 
 // 开机图片
     Route::post('/getBootPic', 'App\Controller\OttController@getBootPic');

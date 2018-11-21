@@ -611,7 +611,7 @@ class iptvService extends common
 
          $cacheData['page']       = $searcher->page;
          $cacheData['perPage']    = $searcher->perPage;
-         $cacheData['totalPage']  = $searcher->getPageCount($totalCount);
+         $cacheData['totalPage']  = $searcher->getPageCount($totalCount, 'perPage');
          $cacheData['totalItems'] = $totalCount;
          $cacheData['lang']       = 'Vietnamese,Chinese,English,Korean,French,Other';
          $cacheData['data']       = $data;

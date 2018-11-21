@@ -72,7 +72,7 @@ class PayController extends BaseController
         return (new payService($request))->paypalNotify($request, false);
     }
 
-    public function getOrderStatus(): array
+    public function getOrderStatus(): string
     {
         $order_sign = $this->request->post('order_sign');
         $data = (new payService($this->request))->getOrderInfo($order_sign);

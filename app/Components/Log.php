@@ -23,7 +23,6 @@ class Log
 
     public static function info(Request $request)
     {
-
         // 如果没有用标准的application/json流 进行请求
         if ($request->method() == 'POST' && isset($request->server()->HTTP_CONTENT_TYPE) && $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
             $log = $request->rawData()->scalar;
@@ -36,7 +35,12 @@ class Log
             }
 
             if (!isset($log['header'])) {
-                $log['header'] = ltrim(strstr($request->server('REQUEST_URI'), '?', true), '/');
+                $uri = $request->server('REQUEST_URI');
+                if (strpos($uri, '?') !== false) {
+                    $log['header'] = ltrim(strstr($uri, '?', true), '/');
+                } else {
+                    $log['header'] = strstr(ltrim($uri, '/'), '/', true);
+                }
             }
 
             $log = json_encode($log);

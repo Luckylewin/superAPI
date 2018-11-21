@@ -54,9 +54,9 @@ class Request
      */
     protected static $_clientIP;
 
-    public $isGet;
+    protected $isGet;
 
-    public $isPost;
+    protected $isPost;
 
     public function __construct()
     {

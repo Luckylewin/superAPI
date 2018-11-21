@@ -11,13 +11,16 @@ namespace App\Controller;
 
 use App\Components\http\Formatter;
 use App\Components\Log;
+use App\Components\Validator;
+use App\Exceptions\ErrorCode;
 use Breeze\Http\Controller;
 use Breeze\Http\Request;
 
 class BaseController extends Controller
 {
     public $request;
-
+    public $data;
+    public $uid;
     /**
      * BaseController constructor.
      * @param $request
@@ -37,6 +40,44 @@ class BaseController extends Controller
 
         // 记录日志
         Log::info($this->request);
+
+        $this->uid = $request->post('uid');
+        $this->data = $request->post('data');
+    }
+
+    /**
+     * 处理raw post数据
+     * @param null $field
+     * @param null $default
+     * @param null $rule
+     * @return null|object|string|integer
+     * @throws \Exception
+     */
+    public function post($field = null, $default = null, $rule = null)
+    {
+        if (!$field && !$default) {
+            return $this->data;
+        }
+        if (!isset($this->data[$field]) && is_null($default)) {
+            throw new \InvalidArgumentException($field . "是必须的参数", ErrorCode::$RES_ERROR_PARAMETER_MISSING);
+        }
+
+        if (isset($this->data[$field])) {
+            $val = $this->data[$field];
+            if ($rule) {
+                $result =  Validator::validate($rule, $val);
+                if ($result['status'] === false) {
+                    throw new \InvalidArgumentException("参数错误", $result['code']);
+                }
+                return $result['value'];
+            }
+            return $val;
+
+        } else if ($default) {
+            return $val = $default;
+        }
+
+        return null;
     }
 
 

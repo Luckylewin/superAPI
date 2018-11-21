@@ -20,20 +20,20 @@ class appService extends common
      * 获取App市场列表
      * @param $time
      * @param $sign
-     * @param $scheme
+     * @param $schemeName
      * @param $page
      * @param $limit
      * @return array
      */
-    public function getAppMarket($time, $sign, $scheme, $page, $limit):array
+    public function getAppMarket($time, $sign, $schemeName, $page, $limit):array
     {
         $serverSign = md5(md5('topthinker'.$time.$this->uid));
         $offset = $limit * ($page-1);
         $where = [];
 
-        if ($scheme) {
+        if ($schemeName) {
             $scheme = Capsule::table('sys_scheme')
-                               ->where('schemeName', '=', $scheme)
+                               ->where('schemeName', '=', $schemeName)
                                ->first();
 
             if (isset($scheme->id) && !empty($scheme->id)) {
@@ -85,7 +85,7 @@ class appService extends common
             }
         }
 
-        $market['scheme'] = ":" . $scheme->schemeName;
+        $market['scheme'] = ":" . $schemeName;
         $market['total']  = $total;
         $market['totalPage'] = ceil($total/$limit);
         $market['page']   = $page;

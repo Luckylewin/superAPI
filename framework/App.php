@@ -73,6 +73,7 @@ class App
         } finally {
 
             $response = Response::build($result, $conf, $format);
+
             $connection->send($response);
         }
     }
