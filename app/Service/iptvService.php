@@ -217,6 +217,10 @@ class iptvService extends common
          $params        = $searcher->getLinkParams(['cid','name','per_page','page']);
          $data['_meta'] = $searcher->getRestMeta();
 
+         $searcher->getQuery()
+                  ->orderBy('sort', 'asc')
+                  ->orderBy('vod_addtime', 'desc');
+
          $vods = $searcher->getDataByPage();
 
          if (count($vods) <= 0) {
@@ -378,19 +382,19 @@ class iptvService extends common
         switch ($mode)
         {
             case 'year':
-                $typesArr = Vod::getAllValueByListID($list_id, 'vod_year');
+                $typesArr = VodList::getPartOfItemsByListID($list_id, 'year');
                 break;
             case 'area':
-                $typesArr = Vod::getAllValueByListID($list_id, 'vod_area');
+                $typesArr = VodList::getPartOfItemsByListID($list_id, 'area');
                 break;
             case 'language':
-                $typesArr = Vod::getAllValueByListID($list_id, 'vod_language');
+                $typesArr = VodList::getPartOfItemsByListID($list_id, 'language');
                 break;
             case 'hot':
-                $typesArr = Vod::getAllTagByListID($list_id);
+                $typesArr = VodList::getPartOfItemsByListID($list_id, 'type');
                 break;
             case 'type':
-                $typesArr = Vod::getAllTagByListID($list_id);
+                $typesArr = VodList::getPartOfItemsByListID($list_id, 'type');
                 break;
             default:
                 $typesArr = [];
@@ -498,7 +502,9 @@ class iptvService extends common
 
         $query = Capsule::table('iptv_vod')
                             ->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple'])
-                            ->where('vod_cid', '=', $cid);
+                            ->where('vod_cid', '=', $cid)
+                            ->orderBy('sort', 'asc')
+                            ->orderBy('vod_addtime', 'desc');
 
         $searcher->setQuery($query);
 
