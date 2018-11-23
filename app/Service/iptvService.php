@@ -378,27 +378,7 @@ class iptvService extends common
         }
 
         $list_id = $vods->list_id;
-
-        switch ($mode)
-        {
-            case 'year':
-                $typesArr = VodList::getPartOfItemsByListID($list_id, 'year');
-                break;
-            case 'area':
-                $typesArr = VodList::getPartOfItemsByListID($list_id, 'area');
-                break;
-            case 'language':
-                $typesArr = VodList::getPartOfItemsByListID($list_id, 'language');
-                break;
-            case 'hot':
-                $typesArr = VodList::getPartOfItemsByListID($list_id, 'type');
-                break;
-            case 'type':
-                $typesArr = VodList::getPartOfItemsByListID($list_id, 'type');
-                break;
-            default:
-                $typesArr = [];
-        }
+        $typesArr = VodList::getPartOfItemsByListID($list_id, 'hot');
 
         if (empty($typesArr)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
