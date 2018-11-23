@@ -578,7 +578,7 @@ class OttController extends BaseController
     {
         try {
             $genre      = $this->post('genre');
-            $cardSecret = $this->post('card_secret', null);
+            $cardSecret = $this->post('card_secret', '');
             $sign       = $this->post('sign');
             $timestamp  = $this->post('timestamp');
         } catch (\Exception $e) {

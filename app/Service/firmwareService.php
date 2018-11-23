@@ -80,7 +80,12 @@ class firmwareService extends common
             return true;
         }
 
-        $clientVersion = explode('_',$client);
+        if (strpos($client, '_') !== false) {
+            $clientVersion = explode('_',$client);
+        } else {
+            $clientVersion = explode('.',$client);
+        }
+
         $serverVersion = explode('.',$server);
 
         //比较主次版本
