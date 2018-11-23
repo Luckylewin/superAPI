@@ -24,6 +24,7 @@ class firmwareService extends common
      */
     public function getFirmware($order_id, $clientVersion, $type = "dvb"): array
     {
+
         $firmwareIndex = Capsule::table('dvb_order as a')
                                  ->select('b.ID as fid')
                                  ->leftJoin('firmware_class AS b','a.id','=', 'b.order_id')

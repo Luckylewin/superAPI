@@ -65,8 +65,12 @@ class OttController extends BaseController
     // 升级固件
     public function getFirmware(): string
     {
-        $orderId       = $this->request->post('order_id', null);
-        $clientVersion = $this->request->post('version', 0);
+        try {
+            $orderId       = $this->post('order_id', null);
+            $clientVersion = $this->post('version', 0);
+        } catch (\Exception $e) {
+            return Formatter::response($e->getCode());
+        }
 
         $firmwareService = new firmwareService($this->request);
         $firmware = $firmwareService->getFirmware($orderId, $clientVersion);
@@ -80,8 +84,13 @@ class OttController extends BaseController
     // 升级安卓固件
     public function getAndroidFirmware()
     {
-        $orderId = $this->request->post('order_id', null);
-        $clientVersion = $this->request->post('version', 0);
+        try {
+            $orderId = $this->post('order_id', null);
+            $clientVersion = $this->post('version', 0);
+        } catch (\Exception $e) {
+            return Formatter::response($e->getCode());
+        }
+
         $firmwareService = new firmwareService($this->request);
         $firmware = $firmwareService->getFirmware($orderId, $clientVersion, 'android');
         if ($firmware['status'] === false) {
@@ -156,7 +165,7 @@ class OttController extends BaseController
             return Formatter::response($list['code']);
         }
 
-        $format = $this->request->post('format') ?? 'xml';
+
         if ($format == 'json') {
             return Formatter::success($list['data']);
         } else {
@@ -492,7 +501,11 @@ class OttController extends BaseController
     // 获取频道图标
     public function getChannelIcon()
     {
-        $name = $this->request->post('data')['name'];
+        try {
+            $name = $this->post('name');
+        } catch (\Exception $e) {
+            return Formatter::response($e->getCode());
+        }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getChannelIcon($name);
@@ -506,7 +519,11 @@ class OttController extends BaseController
     // 获取当个分类详情
     public function getGenre(): string
     {
-        $name = $this->request->post('data')['name'];
+        try {
+            $name = $this->post('name');
+        } catch (\Exception $e) {
+            return Formatter::response($e->getCode());
+        }
         $ottService = new ottService($this->request);
         $data = $ottService->getGenre($name);
         if ($data['status'] === false) {
@@ -519,8 +536,13 @@ class OttController extends BaseController
     // 获取分类使用状态
     public function getGenreUsageInfo()
     {
-        $genre = $this->request->post('data')['genre'];
-        $access_key = $this->request->post('access_key', '');
+        try {
+            $genre = $this->post('genre');
+            $access_key = $this->post('access_key', '');
+        } catch (\Exception $e) {
+            return Formatter::response($e->getCode());
+        }
+
         $ottService = new ottService($this->request);
         $data = $ottService->getGenreUsageInfo($genre, $access_key);
 

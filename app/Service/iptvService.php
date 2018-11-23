@@ -378,7 +378,7 @@ class iptvService extends common
         }
 
         $list_id = $vods->list_id;
-        $typesArr = VodList::getPartOfItemsByListID($list_id, 'hot');
+        $typesArr = VodList::getPartOfItemsByListID($list_id, $mode);
 
         if (empty($typesArr)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
