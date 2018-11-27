@@ -364,6 +364,8 @@ class iptvService extends common
     {
         // 计算type的offset
         $type_params = $this->getTypeParams();
+        $type_params['type'] = $type;
+
         list($type_offset, $type_limit) = $this->getOffset($type_params['type_page'], $type_params['type_perpage']);
 
         // 计算items的offset
