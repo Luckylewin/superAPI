@@ -364,7 +364,6 @@ class iptvService extends common
     {
         // 计算type的offset
         $type_params = $this->getTypeParams();
-        $type_params['type'] = $type;
 
         list($type_offset, $type_limit) = $this->getOffset($type_params['type_page'], $type_params['type_perpage']);
 
@@ -436,6 +435,8 @@ class iptvService extends common
         }
 
         array_multisort(array_column($data, 'total'),SORT_DESC, $data);
+
+        $type_params['genre'] = $type;
 
         $finalData = [
             'items'  => $data,
