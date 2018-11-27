@@ -436,8 +436,8 @@ class iptvService extends common
 
         array_multisort(array_column($data, 'total'),SORT_DESC, $data);
 
-        $type_params['genre'] = $type;
-
+        $type_params['type'] = $type;
+        
         $finalData = [
             'items'  => $data,
             '_links' => Rest::setLinks($type_meta,'iptv/'.$mode, $type_params, 'type_page'),
