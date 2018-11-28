@@ -6,6 +6,7 @@ use App\Components\helper\ArrayHelper;
 use App\Components\helper\Func;
 use App\Exceptions\ErrorCode;
 use App\Models\KaraokeSearcher;
+use App\Models\Language;
 use App\Models\ListSearcher;
 use App\Models\Rest;
 use App\Models\Vod;
@@ -328,9 +329,10 @@ class iptvService extends common
     /**
      * 获取左侧/顶部/底部 栏目
      * @param $type string 如Movie
+     * @param $language string 如Movie
      * @return array
      */
-    public function getCategory($type): array
+    public function getCategory($type, $language='en-us'): array
     {
         $type = ucfirst(strtolower($type));
         // 根据type查找cid
@@ -341,16 +343,37 @@ class iptvService extends common
 
         $items = VodList::getAllSearchItemsByListID($vods->list_id);
 
+        if (empty($items)) {
+            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
+        }
+
+        $i18nData = [];
+        $ids = array_column(ArrayHelper::toArray($items), 'bid');
+        $i18n = Capsule::table('sys_multi_lang')
+                ->select(['fid','value'])
+                ->whereIn('fid', $ids)
+                ->where('table', '=', 'iptv_type_item')
+                ->where('language', '=', $language)
+                ->where('field', '=', 'name')
+                ->get()
+                ->toArray();
+
+
+        if (!empty($i18n)) {
+            foreach ($i18n as $val) {
+                $i18nData[$val->fid] = $val->value;
+            }
+        }
+
         $data = [];
         foreach ($items as $item) {
+
             $data[$item->field]['name']        = $item->name;
             $data[$item->field]['field']       = ucfirst($item->field);
             $data[$item->field]['image']       = !empty($item->image)? Func::getAccessUrl('287994000', $item->image, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
             $data[$item->field]['image_hover'] = !empty($item->image_hover)? Func::getAccessUrl('287994000', $item->image_hover, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
-            $data[$item->field]['items'][]     = ['name' => $item->itemName, 'zh_name' => $item->zh_name];
-            $data[$item->field]['_links']      = [
-                'self' => Url::to('iptv/' . $item->field, ['type' => $type])
-            ];
+            $data[$item->field]['items'][]     = isset($i18nData[$item->bid]) ? ['name' => $item->itemName, 'i18n'=> $i18nData[$item->bid]] : ['name' => $item->itemName, 'i18n'=> $item->itemName];
+            $data[$item->field]['_links']      = ['self' => Url::to('iptv/' . $item->field, ['type' => $type, 'lang' => $language])];
         }
 
         if (empty($data)) {
@@ -360,7 +383,7 @@ class iptvService extends common
         return ['status' => true, 'data' => $data];
     }
 
-    public function getDimensionData($type, $mode = 'hot'): array
+    public function getDimensionData($type, $mode = 'hot', $language='en-us'): array
     {
         // 计算type的offset
         $type_params = $this->getTypeParams();
@@ -419,9 +442,10 @@ class iptvService extends common
 
             $_links = Rest::setLinks($_meta,'iptv/list', $params, 'items_page');
 
+            // i18n
             if ($total) {
                 $data[] = [
-                    'type'   => $str,
+                    'type'   => Language::translate($str, $language, 'iptv_type_item'),
                     'items'  => $vods,
                     '_links' => $_links,
                     '_meta'  => $_meta,
@@ -437,7 +461,8 @@ class iptvService extends common
         array_multisort(array_column($data, 'total'),SORT_DESC, $data);
 
         $type_params['type'] = $type;
-        
+        $type_params['lang'] = $language;
+
         $finalData = [
             'items'  => $data,
             '_links' => Rest::setLinks($type_meta,'iptv/'.$mode, $type_params, 'type_page'),

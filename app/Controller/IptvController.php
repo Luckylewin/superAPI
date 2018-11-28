@@ -160,8 +160,10 @@ class IptvController extends BaseController
     public function getCategory(): array
     {
         $type = $this->request->get('type', 'Movie');
+        $language = $this->request->get('lang', 'en-us');
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getCategory($type);
+        $data = $iptvService->getCategory($type, $language);
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
@@ -173,8 +175,10 @@ class IptvController extends BaseController
     public function getByHot(): array
     {
         $type = $this->request->get('type', 'Movie');
+        $language = $this->request->get('lang', 'en-us');
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getDimensionData($type, 'hot');
+        $data = $iptvService->getDimensionData($type, 'hot', $language);
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
@@ -186,8 +190,10 @@ class IptvController extends BaseController
     public function getByType(): array
     {
         $type = $this->request->get('type', 'Movie');
+        $language = $this->request->get('lang', 'en-us');
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getDimensionData($type, 'type');
+        $data = $iptvService->getDimensionData($type, 'type', $language);
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
@@ -199,8 +205,10 @@ class IptvController extends BaseController
     public function getByYear(): array
     {
         $type = $this->request->get('type', 'Movie');
+        $language = $this->request->get('lang', 'en-us');
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getDimensionData($type, 'year');
+        $data = $iptvService->getDimensionData($type, 'year', $language);
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
@@ -211,9 +219,11 @@ class IptvController extends BaseController
 
     public function getByArea(): array
     {
-        $type = $this->request->get('type', 'Movie');
+        $type     = $this->request->get('type', 'Movie');
+        $language = $this->request->get('lang', 'en-us');
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getDimensionData($type, 'area');
+        $data = $iptvService->getDimensionData($type, 'area', $language);
 
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);

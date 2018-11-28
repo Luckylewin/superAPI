@@ -15,9 +15,9 @@ class VodList
 {
     public static function getAllSearchItemsByListID($list_id)
     {
-        return Capsule::table('iptv_type AS a')
+        $data =  Capsule::table('iptv_type AS a')
             ->where('vod_list_id', '=', $list_id)
-            ->select(['a.*', 'b.name as itemName','b.zh_name','b.exist_num'])
+            ->select(['a.*', 'b.name as itemName','b.zh_name','b.exist_num','b.id as bid'])
             ->orderBy('a.sort', 'asc')
             ->orderBy('b.sort', 'asc')
             ->leftJoin('iptv_type_item AS b', 'b.type_id', '=', 'a.id')
@@ -25,7 +25,13 @@ class VodList
             ->where('b.is_show', '=', 1)
             ->get()
             ->toArray();
+
+
+
+        return $data;
+
     }
+
 
     public static function getPartOfItemsByListID($list_id, $type)
     {

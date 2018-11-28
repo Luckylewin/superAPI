@@ -43,16 +43,20 @@ class OttController extends BaseController
     // 升级APP
     public function getNewApp(): string
     {
-        if ($this->request->isGet) {
-            $ver = $this->request->get('ver', 0);
-            $type = $this->request->get('type');
-        } else {
-            $ver = $this->request->post('ver', 0);
-            $type = $this->request->post('type');
-        }
+       try {
+           if ($this->request->isGet) {
+               $ver = $this->request->get('ver', 0);
+               $type = $this->request->get('type');
+           } else {
+               $ver  = $this->post('ver', 0);
+               $type = $this->post('type');
+           }
+       } catch (\Exception $e) {
+           return Formatter::response($e['code']);
+       }
 
         $appService = new appService($this->request);
-        $app = $appService->updateApp($type, $ver);
+        $app        = $appService->updateApp($type, $ver);
 
         if ($app['status'] === false) {
             return Formatter::response($app['code']);
