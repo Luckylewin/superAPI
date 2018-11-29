@@ -50,6 +50,8 @@ class Vod
                 break;
         }
 
+        $query->orderBy('sort', 'asc');
+
         return $query;
     }
 

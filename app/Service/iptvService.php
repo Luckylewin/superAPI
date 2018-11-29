@@ -513,7 +513,7 @@ class iptvService extends common
                             ->where('vod_cid', '=', $cid)
                             ->orderBy('sort', 'asc')
                             ->orderBy('vod_addtime', 'desc');
-
+        
         $searcher->setQuery($query);
 
         // 查询
