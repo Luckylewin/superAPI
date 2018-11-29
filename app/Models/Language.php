@@ -55,7 +55,6 @@ class Language
             ->select(['fid','value'])
             ->where('table', '=', 'iptv_type')
             ->where('language', '=', $language)
-            ->where('field', '=', 'name')
             ->get()
             ->toArray();
 

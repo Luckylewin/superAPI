@@ -349,11 +349,11 @@ class iptvService extends common
 
         $itemsI18nData = Language::getItemsI18n($items, $language);
         $typesI18nData = Language::getTypeI18n($language);
-        
+
         $data = [];
         foreach ($items as $item) {
 
-            $data[$item->field]['name']        = isset($typesI18nData[$item->id]) ?  $typesI18nData[$item->bid] : $item->name;
+            $data[$item->field]['name']        = isset($typesI18nData[$item->id]) ?  $typesI18nData[$item->id] : $item->name;
             $data[$item->field]['field']       = ucfirst($item->field);
             $data[$item->field]['image']       = !empty($item->image)? Func::getAccessUrl('287994000', $item->image, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
             $data[$item->field]['image_hover'] = !empty($item->image_hover)? Func::getAccessUrl('287994000', $item->image_hover, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
