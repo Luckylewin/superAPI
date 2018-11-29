@@ -332,7 +332,7 @@ class iptvService extends common
      * @param $language string 如Movie
      * @return array
      */
-    public function getCategory($type, $language='en-us'): array
+    public function getCategory($type, $language='en_US'): array
     {
         $type = ucfirst(strtolower($type));
         // 根据type查找cid

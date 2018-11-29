@@ -160,7 +160,7 @@ class IptvController extends BaseController
     public function getCategory(): array
     {
         $type = $this->request->get('type', 'Movie');
-        $language = $this->request->get('lang', 'en-us');
+        $language = $this->request->get('lang', 'en_US');
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getCategory($type, $language);
