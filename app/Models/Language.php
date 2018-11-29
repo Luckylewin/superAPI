@@ -8,6 +8,7 @@
 
 namespace App\Models;
 
+use App\Components\helper\ArrayHelper;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Language
@@ -23,6 +24,48 @@ class Language
         }
 
         return $query;
+    }
+
+    public static function getItemsI18n($items, $language)
+    {
+        $itemsI18nData = [];
+        $ids = array_column(ArrayHelper::toArray($items), 'bid');
+        $i18n = Capsule::table('sys_multi_lang')
+            ->select(['fid','value'])
+            ->whereIn('fid', $ids)
+            ->where('table', '=', 'iptv_type_item')
+            ->where('language', '=', $language)
+            ->where('field', '=', 'name')
+            ->get()
+            ->toArray();
+
+        if (!empty($i18n)) {
+            foreach ($i18n as $val) {
+                $itemsI18nData[$val->fid] = $val->value;
+            }
+        }
+
+        return $itemsI18nData;
+    }
+
+    public static function getTypeI18n($language)
+    {
+        $typesI18nData = [];
+        $i18n = Capsule::table('sys_multi_lang')
+            ->select(['fid','value'])
+            ->where('table', '=', 'iptv_type')
+            ->where('language', '=', $language)
+            ->where('field', '=', 'name')
+            ->get()
+            ->toArray();
+
+        if (!empty($i18n)) {
+            foreach ($i18n as $val) {
+                $typesI18nData[$val->fid] = $val->value;
+            }
+        }
+
+        return $typesI18nData;
     }
 
     public static function getLanguages()

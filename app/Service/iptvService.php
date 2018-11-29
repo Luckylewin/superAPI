@@ -347,32 +347,17 @@ class iptvService extends common
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
         }
 
-        $i18nData = [];
-        $ids = array_column(ArrayHelper::toArray($items), 'bid');
-        $i18n = Capsule::table('sys_multi_lang')
-                ->select(['fid','value'])
-                ->whereIn('fid', $ids)
-                ->where('table', '=', 'iptv_type_item')
-                ->where('language', '=', $language)
-                ->where('field', '=', 'name')
-                ->get()
-                ->toArray();
-
-
-        if (!empty($i18n)) {
-            foreach ($i18n as $val) {
-                $i18nData[$val->fid] = $val->value;
-            }
-        }
-
+        $itemsI18nData = Language::getItemsI18n($items, $language);
+        $typesI18nData = Language::getTypeI18n($language);
+        
         $data = [];
         foreach ($items as $item) {
 
-            $data[$item->field]['name']        = $item->name;
+            $data[$item->field]['name']        = isset($typesI18nData[$item->id]) ?  $typesI18nData[$item->bid] : $item->name;
             $data[$item->field]['field']       = ucfirst($item->field);
             $data[$item->field]['image']       = !empty($item->image)? Func::getAccessUrl('287994000', $item->image, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
             $data[$item->field]['image_hover'] = !empty($item->image_hover)? Func::getAccessUrl('287994000', $item->image_hover, 13086400) : 'https://s1.ax1x.com/2018/11/14/ijMGqK.png';
-            $data[$item->field]['items'][]     = isset($i18nData[$item->bid]) ? ['name' => $item->itemName, 'i18n'=> $i18nData[$item->bid]] : ['name' => $item->itemName, 'i18n'=> $item->itemName];
+            $data[$item->field]['items'][]     = isset($itemsI18nData[$item->bid]) ? ['name' => $item->itemName, 'i18n'=> $itemsI18nData[$item->bid]] : ['name' => $item->itemName, 'i18n'=> $item->itemName];
             $data[$item->field]['_links']      = ['self' => Url::to('iptv/' . $item->field, ['type' => $type, 'lang' => $language])];
         }
 
@@ -513,7 +498,7 @@ class iptvService extends common
                             ->where('vod_cid', '=', $cid)
                             ->orderBy('sort', 'asc')
                             ->orderBy('vod_addtime', 'desc');
-        
+
         $searcher->setQuery($query);
 
         // 查询
