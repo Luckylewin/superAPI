@@ -682,7 +682,7 @@ class ottService extends common
     {
         $redisKey = "ALL_" . strtoupper($genre) . "_PARADE_LIST";
         $redisDB = Redis::$REDIS_EPG;
-        //$cache = $this->getDataFromCache($redisKey, $redisDB);
+        $cache = $this->getDataFromCache($redisKey, $redisDB);
 
         if ($cache) {
             if ($cache['version'] == $version) {
