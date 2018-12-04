@@ -682,7 +682,7 @@ class ottService extends common
     {
         $redisKey = "ALL_" . strtoupper($genre) . "_PARADE_LIST";
         $redisDB = Redis::$REDIS_EPG;
-        $cache = $this->getDataFromCache($redisKey, $redisDB);
+        //$cache = $this->getDataFromCache($redisKey, $redisDB);
 
         if ($cache) {
             if ($cache['version'] == $version) {
@@ -720,6 +720,8 @@ class ottService extends common
             }
 
             if (!empty($channelParades)) {
+                var_dump(array_column($channelParades,'parade_date'));
+                array_multisort(array_column($channelParades,'parade_date'),SORT_ASC, $channelParades);
                 $parade[] = [
                     'name' => $item['channel'],
                     'items' => $channelParades
