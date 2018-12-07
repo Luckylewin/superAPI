@@ -9,6 +9,7 @@
 namespace App\Controller;
 
 use App\Components\http\Formatter;
+use App\Exceptions\ErrorCode;
 use App\Models\KaraokeSearcher;
 use App\Service\appService;
 use App\Service\authService;
@@ -21,6 +22,11 @@ use Breeze\Http\Response;
 
 class OttController extends BaseController
 {
+    public function setError($errorCode)
+    {
+        $this->error = ErrorCode::getError($errorCode);
+    }
+
     /**
      * 获取访问令牌
      * @return string
@@ -34,8 +40,9 @@ class OttController extends BaseController
         $authService = new authService($this->request);
         $token = $authService->getClientToken($time, $sign);
         if ($token['status'] === false) {
-            return Formatter::response($token['code']);
+            return $this->fail($token['code']);
         }
+
         Formatter::format(Formatter::JSON);
         return $token['data'];
     }
@@ -43,26 +50,26 @@ class OttController extends BaseController
     // 升级APP
     public function getNewApp(): string
     {
-       try {
-           if ($this->request->isGet) {
-               $ver = $this->request->get('ver', 0);
-               $type = $this->request->get('type');
-           } else {
-               $ver  = $this->post('ver', 0);
-               $type = $this->post('type');
-           }
-       } catch (\Exception $e) {
-           return Formatter::response($e['code']);
-       }
+        try {
+            if ($this->request->isGet) {
+                $ver = $this->request->get('ver', 0);
+                $type = $this->request->get('type');
+            } else {
+                $ver  = $this->post('ver', 0);
+                $type = $this->post('type');
+            }
+        } catch (\Exception $e) {
+            return $this->fail($e->getCode());
+        }
 
         $appService = new appService($this->request);
         $app        = $appService->updateApp($type, $ver);
 
         if ($app['status'] === false) {
-            return Formatter::response($app['code']);
+            return $this->fail($app['code']);
         }
 
-        return Formatter::success($app['data']);
+        return $this->success($app['data']);
     }
 
 
@@ -73,16 +80,16 @@ class OttController extends BaseController
             $orderId       = $this->post('order_id', null);
             $clientVersion = $this->post('version', 0);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $firmwareService = new firmwareService($this->request);
         $firmware = $firmwareService->getFirmware($orderId, $clientVersion);
         if ($firmware['status'] === false) {
-            return Formatter::response($firmware['code']);
+            return $this->fail($firmware['code']);
         }
 
-        return Formatter::success($firmware['data']);
+        return $this->success($firmware['data']);
     }
 
     // 升级安卓固件
@@ -92,16 +99,16 @@ class OttController extends BaseController
             $orderId = $this->post('order_id', null);
             $clientVersion = $this->post('version', 0);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $firmwareService = new firmwareService($this->request);
         $firmware = $firmwareService->getFirmware($orderId, $clientVersion, 'android');
         if ($firmware['status'] === false) {
-            return Formatter::response($firmware['code']);
+            return $this->fail($firmware['code']);
         }
 
-        return Formatter::success($firmware['data']);
+        return $this->success($firmware['data']);
     }
 
     // APP市场
@@ -114,17 +121,18 @@ class OttController extends BaseController
             $page  = $this->post('page', 1);
             $limit = $this->post('per_page', 10);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+
+            return $this->fail($e->getCode());
         }
 
         $appService = new appService($this->request);
         $market = $appService->getAppMarket($sign, $time, $scheme, $page, $limit);
 
         if ($market['status'] === false) {
-            return Formatter::response($market['code']);
+            return $this->fail($market['code']);
         }
 
-        return Formatter::success($market['data']);
+        return $this->success($market['data']);
     }
 
     // 取具体的APP数据
@@ -135,17 +143,17 @@ class OttController extends BaseController
             $time  = $this->post('time');
             $appId = $this->post('appid');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $appService = new appService($this->request);
         $app        = $appService->getConcreteApp($appId, $time, $sign);
 
         if ($app['status'] === false) {
-            return Formatter::response($app['code']);
+            return $this->fail($app['code']);
         }
 
-        return Formatter::success($app['data']);
+        return $this->success($app['data']);
     }
 
     // 取直播列表
@@ -160,18 +168,17 @@ class OttController extends BaseController
             $version = str_replace('_', '.', $this->post('ver', 0));
             $format  = strtoupper($this->post('format', 'XML'));
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $list = $ottService->getList($genre, $version, $scheme, $format, $access_key);
         if ($list['status'] === false) {
-            return Formatter::response($list['code']);
+            return $this->fail($list['code']);
         }
 
-
         if ($format == 'json') {
-            return Formatter::success($list['data']);
+            return $this->success($list['data']);
         } else {
             Response::format(Response::XML);
             return $list['data'];
@@ -188,10 +195,10 @@ class OttController extends BaseController
         $ottService = new ottService($this->request);
         $data = $ottService->getMainClass();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取正则
@@ -200,16 +207,17 @@ class OttController extends BaseController
         try {
             $version = $this->post('version', 0);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getRegex($version);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 轮播图
@@ -218,10 +226,10 @@ class OttController extends BaseController
         $ottService = new ottService($this->request);
         $data = $ottService->getBanners();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 轮播图
@@ -230,10 +238,10 @@ class OttController extends BaseController
         $ottService = new ottService($this->request);
         $data = $ottService->getRecommend();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取未来N小时的比赛
@@ -245,16 +253,16 @@ class OttController extends BaseController
             $language = $this->post('lang', 'en');
             $timezone = $this->post('timezone', '+8');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getRecentEvent($language, $timezone, $hour, $prev);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 卡拉ok列表
@@ -269,16 +277,17 @@ class OttController extends BaseController
             $searcher->page = $this->post('page', '1');
             $searcher->perPage = $this->post('perPage', 10);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getKaraokeList($searcher);
+
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     /**
@@ -290,16 +299,16 @@ class OttController extends BaseController
         try {
             $url = $this->post('url', null);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getKaraoke($url);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 续费
@@ -308,16 +317,16 @@ class OttController extends BaseController
         try {
             $cardSecret = $this->post('card_secret', null);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $iptvService = new chargeService($this->request);
         $data = $iptvService->renew($cardSecret);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 注册
@@ -327,16 +336,16 @@ class OttController extends BaseController
             $sign = $this->post('sign');
             $sn   = $this->post('sn');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $userService = new userService($this->request);
         $data = $userService->signup($sign, $sn);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取过期时间
@@ -345,10 +354,10 @@ class OttController extends BaseController
         $userService = new userService($this->request);
         $data = $userService->getMacExpireTime();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取帐号信息
@@ -357,7 +366,7 @@ class OttController extends BaseController
         try {
             $from = $this->post('from', 'box');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $userService = new userService($this->request);
@@ -369,10 +378,10 @@ class OttController extends BaseController
         }
 
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     //取服务器列表
@@ -383,7 +392,7 @@ class OttController extends BaseController
             'server' => ['192.200.112.162']
         ];
 
-        return Formatter::success($data);
+        return $this->success($data);
     }
 
     //获取服务器时间
@@ -399,16 +408,16 @@ class OttController extends BaseController
             $version = $this->post('version', 0);
             $genre = $this->post('genre', false);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getEPG($genre, $version);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 下单接口
@@ -420,15 +429,15 @@ class OttController extends BaseController
             $timestamp = $this->post('timestamp');
             $sign  = $this->post('sign');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $data = (new chargeService($this->request))->openService($genre, $type, $sign, $timestamp);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     public function getOttPriceList(): string
@@ -436,15 +445,15 @@ class OttController extends BaseController
         try {
             $lang = $this->post('lang', 'en_US');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $data = (new chargeService($this->request))->getOttPriceList($lang);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
 
@@ -454,10 +463,10 @@ class OttController extends BaseController
         $data = (new appService($this->request))->getBootPic();
 
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
 
@@ -469,16 +478,16 @@ class OttController extends BaseController
             $language = $this->post('lang', 'en');
             $timezone = $this->post('timezone', '+8');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getMajorEvent($day, $language, $timezone);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取预告列表
@@ -489,17 +498,18 @@ class OttController extends BaseController
             $name = $this->post('name',null);
             $day = $this->post('day', 1);
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getParadeList($name, $day, $timezone);
 
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取频道图标
@@ -508,16 +518,16 @@ class OttController extends BaseController
         try {
             $name = $this->post('name');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getChannelIcon($name);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取当个分类详情
@@ -526,15 +536,15 @@ class OttController extends BaseController
         try {
             $name = $this->post('name');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
         $ottService = new ottService($this->request);
         $data = $ottService->getGenre($name);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取分类使用状态
@@ -544,17 +554,17 @@ class OttController extends BaseController
             $genre = $this->post('genre');
             $access_key = $this->post('access_key', '');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getGenreUsageInfo($genre, $access_key);
 
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取分类价目表
@@ -564,17 +574,17 @@ class OttController extends BaseController
             $genre = $this->post('genre');
             $lang  = $this->post('lang', 'en_US');
         }catch (\Exception $e) {
-           return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->getGenrePrice($genre, $lang);
 
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 使用激活卡对分类进行激活操作
@@ -586,16 +596,16 @@ class OttController extends BaseController
             $sign       = $this->post('sign');
             $timestamp  = $this->post('timestamp');
         } catch (\Exception $e) {
-            return Formatter::response($e->getCode());
+            return $this->fail($e->getCode());
         }
 
         $ottService = new ottService($this->request);
         $data = $ottService->activateGenre($genre, $cardSecret, $sign, $timestamp);
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 获取隐藏内容隐藏状态
@@ -604,10 +614,10 @@ class OttController extends BaseController
         $ottService = new ottService($this->request);
         $data = $ottService->getLockStatus();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 
     // 解锁隐藏内容
@@ -616,9 +626,9 @@ class OttController extends BaseController
         $ottService = new ottService($this->request);
         $data = $ottService->relieveLock();
         if ($data['status'] === false) {
-            return Formatter::response($data['code']);
+            return $this->fail($data['code']);
         }
 
-        return Formatter::success($data['data']);
+        return $this->success($data['data']);
     }
 }

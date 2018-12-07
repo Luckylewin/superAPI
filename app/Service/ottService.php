@@ -720,7 +720,7 @@ class ottService extends common
             }
 
             if (!empty($channelParades)) {
-                var_dump(array_column($channelParades,'parade_date'));
+
                 array_multisort(array_column($channelParades,'parade_date'),SORT_ASC, $channelParades);
                 $parade[] = [
                     'name' => $item['channel'],

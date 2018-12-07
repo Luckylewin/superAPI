@@ -21,6 +21,19 @@ class BaseController extends Controller
     public $request;
     public $data;
     public $uid;
+    public $error;
+
+    public function setError($errorCode)
+    {
+        $this->error = ErrorCode::getError($errorCode);
+    }
+
+    public function __destruct()
+    {
+        // 记录日志
+        Log::info($this->request, $this->error);
+    }
+
     /**
      * BaseController constructor.
      * @param $request
@@ -38,8 +51,7 @@ class BaseController extends Controller
         $header = $this->request->post()->header ?? 'header';
         Formatter::setHeader($header);
 
-        // 记录日志
-        Log::info($this->request);
+
 
         $this->uid = $request->post('uid');
         $this->data = $request->post('data');
@@ -80,5 +92,15 @@ class BaseController extends Controller
         return null;
     }
 
+    public function fail($code)
+    {
+        $this->setError($code);
+        return Formatter::response($code);
+    }
+
+    public function success($data)
+    {
+        return Formatter::success($data);
+    }
 
 }

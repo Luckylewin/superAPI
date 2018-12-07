@@ -21,45 +21,52 @@ class Log
         }
     }
 
-    public static function info(Request $request)
+    protected static function getLog(Request $request)
     {
         // 如果没有用标准的application/json流 进行请求
         if ($request->method() == 'POST' && isset($request->server()->HTTP_CONTENT_TYPE) && $request->server()->HTTP_CONTENT_TYPE != 'application/json') {
-            $log = $request->rawData()->scalar;
-        } else {
-
-            if (count(get_object_vars($request->request())) > 0) {
-                $log = (array) $request->request();
-            } else {
-                $log = (array) $request->get();
-            }
-
-            if (!isset($log['header'])) {
-                $uri = $request->server('REQUEST_URI');
-                if (strpos($uri, '?') !== false) {
-                    $log['header'] = ltrim(strstr($uri, '?', true), '/');
-                } else {
-                    $log['header'] = strstr(ltrim($uri, '/'), '/', true);
-                }
-            }
-
-            $log = json_encode($log);
+            return $request->rawData()->scalar;
         }
 
+        if (count(get_object_vars($request->request())) > 0) {
+            $log = (array) $request->request();
+        } else {
+            $log = (array) $request->get();
+        }
+
+        if (!isset($log['header'])) {
+            $uri = $request->server('REQUEST_URI');
+            if (strpos($uri, '?') !== false) {
+                $log['header'] = ltrim(strstr($uri, '?', true), '/');
+            } else {
+                $log['header'] = strstr(ltrim($uri, '/'), '/', true);
+            }
+        }
+
+        $log = json_encode($log);
         if ($log == '[]' || empty($log)) {
             return false;
         }
 
-        $redis = Redis::singleton();
-        $redis->select(Redis::$REDIS_API_LOG);
+        return $log;
+    }
 
-        $now = date('H:i:s');
-        $ip = $request->ip();
-        $logStr = $now . '|' . $ip . '|' . $log ;
-        $redis->lPush('log', $logStr);
-        self::stdout($logStr);
+    public static function info(Request $request, $error=null)
+    {
+        if ($log = self::getLog($request)) {
+            $redis = Redis::singleton();
+            $redis->select(Redis::$REDIS_API_LOG);
 
-        return true;
+            $now = date('H:i:s');
+            $ip = $request->ip();
+            $logStr = $now . '|' . $ip . '|' . $log ;
+            if ($error) {
+                $logStr .= '|ERROR:'.$error;
+            }
+
+            $redis->lPush('log', $logStr);
+            self::stdout($logStr);
+        }
     }
 
     public static function stdout($str)

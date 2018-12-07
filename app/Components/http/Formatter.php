@@ -50,6 +50,15 @@ class Formatter
         return json_encode($header);
     }
 
+    public static function back($data, $code)
+    {
+        $header['code'] = "10" . $code;
+        $header['msg'] = ErrorCode::getError($code);
+        $header['data'] = empty($data) ? "" : $data;
+
+        return $header;
+    }
+
     public static function response($code, $format = 'json')
     {
         static::setFormat($format);
@@ -87,12 +96,6 @@ class Formatter
         return json_encode($data);
     }
 
-    public static function back($data, $code)
-    {
-        $header['code'] = "10" . $code;
-        $header['msg'] = ErrorCode::getError($code);
-        $header['data'] = empty($data) ? "" : $data;
-        return $header;
-    }
+
 
 }
