@@ -159,7 +159,7 @@ Route::get('/playlist/{id}', 'App\Controller\PlayController@playlist');
 
 // 点播鉴权
 Route::post('/auth/token', 'App\Controller\IptvController@auth');
-
+Route::get('/auth/token', 'App\Controller\IptvController@auth');
 // banners
 Route::get('/banners', 'App\Controller\IptvController@getBanner');
 
