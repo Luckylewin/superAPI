@@ -34,11 +34,15 @@ class authService extends common
     {
         $sn = $mac;
 
+        if (strlen($timestamp) >= 12) {
+            $timestamp = substr($timestamp, 0, 10);
+        }
+
         if (empty($mac) || empty($timestamp) || empty($signature)) {
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_PARAMETER_MISSING];
         }
 
-        if (abs(time() - $timestamp) > 15) {
+        if (abs(time() - $timestamp) > 60) {
            return ['status' => false, 'code' => ErrorCode::$RES_ERROR_INVALID_REQUEST];
         }
 
