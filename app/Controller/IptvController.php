@@ -26,7 +26,7 @@ class IptvController extends BaseController
         $mac       = $this->request->post('mac')?:$this->request->get('mac');
         $timestamp = $this->request->post('timestamp')?:$this->request->get('timestamp');
         $signature = $this->request->post('signature')?:$this->request->get('signature');
-            
+
         $authService = new authService($this->request);
         $token = $authService->login($mac, $timestamp, $signature);
         if ($token['status'] === false) {

@@ -126,6 +126,9 @@ Route::group(['middleware' => 'json'], function() {
 // 解锁隐藏内容
     Route::post('/relieveLock', 'App\Controller\OttController@relieveLock');
 
+// 点播鉴权
+    Route::post('/auth/token', 'App\Controller\IptvController@auth');
+
 });
 
 
@@ -157,9 +160,8 @@ Route::group(['middleware' => 'sign'], function() {
 // 点播获取 第三方平台播放地址列表
 Route::get('/playlist/{id}', 'App\Controller\PlayController@playlist');
 
-// 点播鉴权
-Route::post('/auth/token', 'App\Controller\IptvController@auth');
-Route::get('/auth/token', 'App\Controller\IptvController@auth');
+
+
 // banners
 Route::get('/banners', 'App\Controller\IptvController@getBanner');
 
@@ -210,12 +212,13 @@ Route::group(['middleware' => 'token'], function() {
     // 单片源下单
     Route::post('/order/buy', 'App\Controller\IptvController@charge');
 
-    // 会员升级下单
-    Route::post('/member/buy', 'App\Controller\MemberController@charge');
+    Route::group(['middleware' => 'json'], function() {
+        // 会员升级下单
+        Route::post('/member/buy', 'App\Controller\MemberController@charge');
 
-    // 查看我的订单
-    Route::post('/member/order', 'App\Controller\MemberController@order');
-
+        // 查看我的订单
+        Route::post('/member/order', 'App\Controller\MemberController@order');
+    });
 });
 
 // apk 升级
