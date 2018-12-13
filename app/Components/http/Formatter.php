@@ -50,8 +50,19 @@ class Formatter
         return json_encode($header);
     }
 
+    public static function yiiBack($data)
+    {
+        static::setFormat('json');
+        $header['code'] = "0";
+        $header['msg'] = ErrorCode::getError(ErrorCode::$RES_SUCCESS);
+        $header['data'] = $data??"";
+
+        return json_encode($header);
+    }
+
     public static function back($data, $code)
     {
+        static::setFormat('json');
         $header['code'] = "10" . $code;
         $header['msg'] = ErrorCode::getError($code);
         $header['data'] = empty($data) ? "" : $data;

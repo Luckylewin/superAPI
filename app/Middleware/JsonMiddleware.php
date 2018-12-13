@@ -32,17 +32,27 @@ class JsonMiddleware implements MiddlewareInterface
             };
         }
 
-        // 判断是否存在UID字段
-        if (!isset($result['uid']) || !isset($result['header'])) {
-            return function() {
-                return Formatter::response(ErrorCode::$RES_ERROR_HEADER_OR_UID_NOT_SET);
-            };
+        $server = $request->server();
+
+        // 判断是否存在URI
+        if ($server->REQUEST_URI == '/') {
+            // 判断是否存在UID字段
+            if ((!isset($result['uid']) && !isset($result['mac'])) || !isset($result['header'])) {
+                return function() {
+                    return Formatter::response(ErrorCode::$RES_ERROR_HEADER_OR_UID_NOT_SET);
+                };
+            }
+        } else {
+            if (!isset($result['uid']) && !isset($result['mac'])) {
+                return function() {
+                    return Formatter::response(ErrorCode::$RES_ERROR_HEADER_OR_UID_NOT_SET);
+                };
+            }
         }
-        	
-	$server = $request->server();
-	if (isset($request->HTTP_CONTENT_TYPE) && $request->HTTP_CONTENT_TYPE != 'application/json' || !empty($rawData)) {
-            $request->setPost($result);
-            $request->setRequest($result);
+
+        if (isset($request->HTTP_CONTENT_TYPE) && $request->HTTP_CONTENT_TYPE != 'application/json' || !empty($rawData)) {
+                $request->setPost($result);
+                $request->setRequest($result);
         }
 
 

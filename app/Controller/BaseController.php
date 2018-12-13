@@ -25,7 +25,7 @@ class BaseController extends Controller
 
     public function setError($errorCode)
     {
-        $this->error = ErrorCode::getError($errorCode);
+        $this->error = $errorCode;
     }
 
     public function __destruct()
@@ -51,9 +51,7 @@ class BaseController extends Controller
         $header = $this->request->post()->header ?? 'header';
         Formatter::setHeader($header);
 
-
-
-        $this->uid = $request->post('uid');
+        $this->uid = $request->post('uid','')?:$request->post('mac','');
         $this->data = $request->post('data');
     }
 
@@ -70,32 +68,53 @@ class BaseController extends Controller
         if (!$field && !$default) {
             return $this->data;
         }
-        if (!isset($this->data[$field]) && is_null($default)) {
-            throw new \InvalidArgumentException($field . "是必须的参数", ErrorCode::$RES_ERROR_PARAMETER_MISSING);
-        }
 
-        if (isset($this->data[$field])) {
-            $val = $this->data[$field];
-            if ($rule) {
-                $result =  Validator::validate($rule, $val);
-                if ($result['status'] === false) {
-                    throw new \InvalidArgumentException("参数错误", $result['code']);
-                }
-                return $result['value'];
+        $fieldValue = $this->getFieldValue($field, $default);
+
+        if ($rule) {
+            $result =  Validator::validate($rule, $fieldValue);
+            if ($result['status'] === false) {
+                throw new \InvalidArgumentException("参数错误", $result['code']);
             }
-            return $val;
 
-        } else if ($default) {
-            return $val = $default;
+            return $result['value'];
         }
 
-        return null;
+        if ($fieldValue) {
+            return $fieldValue;
+        } else if(is_null($default)) {
+            return $default;
+        } else {
+            return null;
+        }
     }
 
-    public function fail($code)
+    protected function getFieldValue($field, $default)
+    {
+        $val = '';
+
+        if ($this->request->post('header')) {
+            if (!isset($this->data[$field]) && is_null($default)) {
+                throw new \InvalidArgumentException($field . "是必须的参数", ErrorCode::$RES_ERROR_PARAMETER_MISSING);
+            }
+            if (isset($this->data[$field])) {
+                $val = $this->data[$field];
+            }
+        } else {
+            $val = $this->request->post($field,'');
+        }
+
+        return $val;
+    }
+
+    public function fail($code, $mode='normal')
     {
         $this->setError($code);
-        return Formatter::response($code);
+        if ($mode == 'normal') {
+            return Formatter::response($code);
+        }
+
+        return Formatter::back([],$code);
     }
 
     public function success($data)

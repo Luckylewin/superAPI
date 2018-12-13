@@ -23,17 +23,22 @@ class IptvController extends BaseController
      */
     public function auth()
     {
-        $mac       = $this->request->post('mac')?:$this->request->get('mac');
-        $timestamp = $this->request->post('timestamp')?:$this->request->get('timestamp');
-        $signature = $this->request->post('signature')?:$this->request->get('signature');
+        try {
+            $mac       = $this->uid;
+            $timestamp = $this->post('timestamp', time());
+            $signature = $this->post('signature','');
+        } catch (\Exception $e) {
+           return $this->fail($e->getCode(), 'yii');
+        }
 
         $authService = new authService($this->request);
         $token = $authService->login($mac, $timestamp, $signature);
         if ($token['status'] === false) {
-            return Formatter::response($token['code']);
+            $this->setError($token['code']);
+            return Formatter::back([],$token['code']);
         }
 
-        return Formatter::success($token['data']);
+        return Formatter::yiiBack($token['data']);
     }
 
     /**
