@@ -311,7 +311,7 @@ class authService extends common
         if (empty($macInfo['MAC'])) {
             //redis找不到 查找数据库
             $macInfo = Capsule::table('mac')
-                          ->select(['MAC','use_flag','duetime','contract_time','logintime','ver','regtime'])
+                          ->select(['MAC','SN','use_flag','duetime','contract_time','logintime','ver','regtime'])
                           ->where([
                               ['MAC' ,'=', $MAC],
                               ['SN' ,'=', $SN],
