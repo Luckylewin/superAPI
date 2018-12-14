@@ -215,7 +215,7 @@ class iptvService extends common
          $searcher->filterWhere($searcher->type, ['vod_type', 'like', '%'.$searcher->type.'%']);
          $searcher->filterWhere($searcher->area, ['vod_area', 'like', '%'.$searcher->area.'%']);
          $searcher->filterWhere($searcher->letter, ['vod_letter', '=', $searcher->letter]);
-         $searcher->filterWhere($searcher->keyword, ['vod_letter', 'like', '%'.$searcher->keyword.'%']);
+         $searcher->filterWhere($searcher->keyword, ['vod_keywords', 'like', '%'.$searcher->keyword.'%']);
 
          $params        = $searcher->getLinkParams(['cid','name','per_page','page']);
          $data['_meta'] = $searcher->getRestMeta();
