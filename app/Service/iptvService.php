@@ -159,7 +159,7 @@ class iptvService extends common
                     $links = Capsule::table('iptv_vodlink')
                                 ->select(['id', 'episode', 'plot', 'pic'])
                                 ->where('group_id', '=', $playGroup['id'])
-                                ->orderBy('episode', 'desc')
+                                ->orderBy('episode', 'asc')
                                 ->get();
 
                     $data = [];
@@ -214,6 +214,8 @@ class iptvService extends common
          $searcher->filterWhere($searcher->year, ['vod_year', '=', $searcher->year]);
          $searcher->filterWhere($searcher->type, ['vod_type', 'like', '%'.$searcher->type.'%']);
          $searcher->filterWhere($searcher->area, ['vod_area', 'like', '%'.$searcher->area.'%']);
+         $searcher->filterWhere($searcher->letter, ['vod_letter', '=', $searcher->letter]);
+         $searcher->filterWhere($searcher->keyword, ['vod_letter', '=', $searcher->keyword]);
 
          $params        = $searcher->getLinkParams(['cid','name','per_page','page']);
          $data['_meta'] = $searcher->getRestMeta();

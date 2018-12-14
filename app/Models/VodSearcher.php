@@ -19,4 +19,6 @@ class VodSearcher extends Searcher
     public $genre;
     public $per_page;
     public $page;
+    public $letter;
+    public $keyword;
 }

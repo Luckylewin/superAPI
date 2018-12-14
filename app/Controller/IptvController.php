@@ -83,6 +83,9 @@ class IptvController extends BaseController
         $searcher->page     = $this->request->get('page') ?? 1;
         $searcher->per_page = $this->request->get('per_page') ?? 12;
         $searcher->genre    = $this->request->get('genre', 'Movie');
+        $searcher->letter = strtoupper($this->request->get('letter', ''));
+        $searcher->keyword = strtoupper($this->request->get('keyword', ''));
+
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getVods($searcher);
