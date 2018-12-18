@@ -71,7 +71,7 @@ class BaseController extends Controller
 
         $fieldValue = $this->getFieldValue($field, $default);
 
-        if ($rule) {
+        if (!is_null($rule)) {
             $result =  Validator::validate($rule, $fieldValue);
             if ($result['status'] === false) {
                 throw new \InvalidArgumentException("参数错误", $result['code']);
@@ -82,7 +82,7 @@ class BaseController extends Controller
 
         if ($fieldValue) {
             return $fieldValue;
-        } else if(is_null($default)) {
+        } else if(!is_null($default)) {
             return $default;
         } else {
             return null;

@@ -221,8 +221,10 @@ class iptvService extends common
          $data['_meta'] = $searcher->getRestMeta();
 
          $searcher->getQuery()
-                  ->orderBy('sort', 'asc')
-                  ->orderBy('vod_addtime', 'desc');
+                  ->orderBy('is_top', 'desc')
+                  ->orderBy('vod_addtime', 'desc')
+                  ->orderBy('sort', 'asc');
+
 
          $vods = $searcher->getDataByPage();
 

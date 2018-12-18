@@ -9,7 +9,6 @@
 namespace App\Controller;
 
 use App\Components\http\Formatter;
-use App\Exceptions\ErrorCode;
 use App\Models\KaraokeSearcher;
 use App\Service\appService;
 use App\Service\authService;
@@ -22,11 +21,6 @@ use Breeze\Http\Response;
 
 class OttController extends BaseController
 {
-    public function setError($errorCode)
-    {
-        $this->error = ErrorCode::getError($errorCode);
-    }
-
     /**
      * 获取访问令牌
      * @return string
@@ -173,11 +167,12 @@ class OttController extends BaseController
 
         $ottService = new ottService($this->request);
         $list = $ottService->getList($genre, $version, $scheme, $format, $access_key);
+
         if ($list['status'] === false) {
             return $this->fail($list['code']);
         }
 
-        if ($format == 'json') {
+        if ($format == 'JSON') {
             return $this->success($list['data']);
         } else {
             Response::format(Response::XML);
