@@ -51,20 +51,19 @@ class appService extends common
         }
 
         $query = Capsule::table('apk_list AS a')
+                                ->orderBy('a.sort','ASC')
                                 ->leftJoin('apk_detail AS b', 'a.ID', '=', 'b.apk_ID')
                                 ->where($where)
-                                ->orderBy('a.sort','ASC')
-                                ->offset($offset)
                                 ->where('is_newest', '=', 1);
 
         if (isset($schemeID)) {
             $query->whereIn('a.ID', $schemeID);
         }
 
-        $data = $query->limit($limit)->get();
+        $data = $query->offset($offset)->limit($limit)->get();
 
-        $total = $data->count();
-        
+        $total = $query->count();
+
         if ($total == false) {
             $this->stdout("没有数据", 'ERROR');
             return ['status' => false, 'code' => ErrorCode::$RES_ERROR_NO_LIST_DATA];
