@@ -222,7 +222,6 @@ class iptvService extends common
 
          $searcher->getQuery()
                   ->orderBy('is_top', 'desc')
-                  ->orderBy('vod_addtime', 'desc')
                   ->orderBy('sort', 'asc');
 
 
