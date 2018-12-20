@@ -60,9 +60,9 @@ class appService extends common
             $query->whereIn('a.ID', $schemeID);
         }
 
-        $data = $query->offset($offset)->limit($limit)->get();
-
         $total = $query->count();
+
+        $data = $query->offset($offset)->limit($limit)->get();
 
         if ($total == false) {
             $this->stdout("没有数据", 'ERROR');
