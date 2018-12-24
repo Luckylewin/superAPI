@@ -13,6 +13,22 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 
 class VodList
 {
+
+    public static function getAllSearchItemsByDir($type)
+    {
+        $type = ucfirst($type);
+
+        $list = Capsule::table('iptv_list')
+                    ->where('list_dir', $type)
+                    ->first();
+
+        if ($list) {
+            return self::getAllSearchItemsByListID($list->list_id);
+        }
+
+        return false;
+    }
+
     public static function getAllSearchItemsByListID($list_id)
     {
         $data =  Capsule::table('iptv_type AS a')
@@ -25,8 +41,6 @@ class VodList
             ->where('b.is_show', '=', 1)
             ->get()
             ->toArray();
-
-
 
         return $data;
 

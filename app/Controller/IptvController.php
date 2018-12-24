@@ -145,8 +145,10 @@ class IptvController extends BaseController
     public function getCondition(): array
     {
         $list_id = $this->request->get('vod_id');
+        $type = ucfirst($this->request->get('type'));
+
         $iptvService = new iptvService($this->request);
-        $data = $iptvService->getCondition($list_id);
+        $data = $iptvService->getCondition($list_id, $type);
         if ($data['status'] === false) {
             return Formatter::back('',$data['code']);
         }

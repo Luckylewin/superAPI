@@ -553,9 +553,13 @@ class iptvService extends common
         return $vods;
     }
 
-    public function getCondition($list_id): array
+    public function getCondition($list_id, $type): array
     {
-        $items = VodList::getAllSearchItemsByListID($list_id);
+        if ($type) {
+            $items = VodList::getAllSearchItemsByDir($type);
+        } else {
+            $items = VodList::getAllSearchItemsByListID($list_id);
+        }
 
         $data = [];
         foreach ($items as $item) {
