@@ -82,10 +82,9 @@ class IptvController extends BaseController
         $searcher->area     = $this->request->get('area') ?? ($this->request->get('vod_language') ?? false);
         $searcher->page     = $this->request->get('page') ?? 1;
         $searcher->per_page = $this->request->get('per_page') ?? 12;
-        $searcher->genre    = $this->request->get('genre', 'Movie');
-        $searcher->letter = strtoupper($this->request->get('letter', ''));
-        $searcher->keyword = strtoupper($this->request->get('keyword', ''));
-
+        $searcher->genre    = ucfirst($this->request->get('genre', 'Movie'));
+        $searcher->letter   = strtoupper($this->request->get('letter', ''));
+        $searcher->keyword  = strtoupper($this->request->get('keyword', ''));
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getVods($searcher);
@@ -145,7 +144,7 @@ class IptvController extends BaseController
     public function getCondition(): array
     {
         $list_id = $this->request->get('vod_id');
-        $type = ucfirst($this->request->get('type'));
+        $type = ucfirst($this->request->get('type')??$this->request->get('genre'));
 
         $iptvService = new iptvService($this->request);
         $data = $iptvService->getCondition($list_id, $type);
