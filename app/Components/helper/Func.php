@@ -20,7 +20,7 @@ class Func
      * @param int $expireTime
      * @return string
      */
-    public static function getAccessUrl($mac, $path, $expireTime = 300)
+    public static function getAccessUrl($mac, $path, $expireTime = 300,$during =  false)
     {
         if (empty($path)) {
             return 'null';
@@ -31,7 +31,12 @@ class Func
         $config =  Config::get('params.NGINX');
         $url = "http://" . $config['MEDIA_IP'] . ":" . $config['MEDIA_PORT'] . $path . "?";
         $secret = $config['DEFAULT_SECRET'] ; //加密密钥
-        $expire = time() + $expireTime;//链接有效时间
+        if ($during) {
+            $expire = strtotime($during);
+        } else {
+            $expire = time() + $expireTime;//链接有效时间
+        }
+
         $md5 = md5($secret.$expire, true); //生成密钥与过期时间的十六位二进制MD5数，
         $md5 = base64_encode($md5);// 对md5进行base64_encode处理
         $md5 = str_replace(array('=','/','+'), array('','_','-'), $md5); //分别替换字符，去掉'='字符, '/'替换成'_','+'替换成'-'

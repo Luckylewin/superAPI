@@ -254,8 +254,8 @@ class ottService extends common
                 ],
                 'event_info' => $teams[0]->$team_name . '-' . $teams[1]->$team_name,
                 'event_info_icon' => [
-                    Func::getAccessUrl($this->uid, $teams[0]->team_icon, 86400),
-                    Func::getAccessUrl($this->uid, $teams[1]->team_icon, 86400),
+                    Func::getAccessUrl($this->uid, $teams[0]->team_icon, 86400,'first day of next month'),
+                    Func::getAccessUrl($this->uid, $teams[1]->team_icon, 86400, 'first day of next month'),
                 ]
             ];
         } else {
