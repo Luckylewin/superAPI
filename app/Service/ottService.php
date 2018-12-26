@@ -558,6 +558,10 @@ class ottService extends common
 
         // 查询免费使用天数
         $day = $genre->free_trail_days;
+        if ($day <= 0) {
+            return ['status' => false, 'msg' => "分类收费，并且没有试用期"];
+        }
+
         $expireTime = strtotime("+ {$day}day");
 
         Capsule::beginTransaction();

@@ -27,8 +27,7 @@ class PayController extends BaseController
         } catch (\Exception $e) {
             return $this->fail($e->getCode());
         }
-
-
+        
         $data = (new payService($this->request))->pay($order_sign, $payType);
 
         if ($data['status'] === false) {
