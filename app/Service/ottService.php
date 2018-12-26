@@ -207,8 +207,11 @@ class ottService extends common
     {
         $offset = $timezone * 3600;
 
+        $weekArray = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+
         $responseData['timezone'] = $timezone;
         $responseData['date'] = date('Y-m-d', $start_time + $offset);
+        $responseData['weekday'] = $weekArray[date('w', $start_time + $offset)];
         $responseData['date_format'] = date('M dS l', $start_time + $offset);
         $responseData['timestamp'] = $start_time;
 

@@ -21,8 +21,13 @@ class PayController extends BaseController
     // 支付接口
     public function pay()
     {
-        $order_sign = $this->request->post('order_sign');
-        $payType    = $this->request->post('pay_type', 'dokypay');
+        try {
+            $order_sign = $this->post('order_sign');
+            $payType    = $this->post('pay_type', 'dokypay');
+        } catch (\Exception $e) {
+            return $this->fail($e->getCode());
+        }
+
 
         $data = (new payService($this->request))->pay($order_sign, $payType);
 
