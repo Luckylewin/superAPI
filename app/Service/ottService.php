@@ -239,6 +239,16 @@ class ottService extends common
             $event_info = [
                 'title' => $event_info->$title,
                 'event_time' => $event_time,
+                'event_information' => [
+                    'A' => [
+                        'name' => $teams[0]->$team_name,
+                        'icon' => Func::getAccessUrl($this->uid, $teams[0]->team_icon, 86400),
+                    ],
+                    'B' => [
+                        'name' => $teams[1]->$team_name,
+                        'icon' => Func::getAccessUrl($this->uid, $teams[1]->team_icon, 86400),
+                    ]
+                ],
                 'event_info' => $teams[0]->$team_name . '-' . $teams[1]->$team_name,
                 'event_info_icon' => [
                     Func::getAccessUrl($this->uid, $teams[0]->team_icon, 86400),

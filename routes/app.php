@@ -102,7 +102,7 @@ Route::group(['middleware' => 'json'], function() {
 // 获取主要赛事
     Route::post('/getMajorEvent','App\Controller\OttController@getMajorEvent' );
 
-// 获取预告列表
+// 获取预告列表(旧版)
     Route::post('/getParadeList','App\Controller\OttController@getParadeList' );
 
 // 获取频道图标
@@ -130,6 +130,13 @@ Route::group(['middleware' => 'json'], function() {
     Route::post('/auth/token', 'App\Controller\IptvController@auth');
 
 });
+
+
+// 获取预告(web)
+Route::get('/parades','App\Controller\ParadeController@index' );
+
+// 赛事
+Route::get('/events', 'App\Controller\ParadeController@event');
 
 
 // 获取客户端ip
