@@ -32,7 +32,7 @@ class Func
         $url = "http://" . $config['MEDIA_IP'] . ":" . $config['MEDIA_PORT'] . $path . "?";
         $secret = $config['DEFAULT_SECRET'] ; //加密密钥
         if ($during) {
-            $expire = strtotime($during);
+            $expire = strtotime(date('Y-m-d', strtotime($during)));
         } else {
             $expire = time() + $expireTime;//链接有效时间
         }
