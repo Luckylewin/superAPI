@@ -237,6 +237,7 @@ class ottService extends common
         $title = self::_geti18n('title', $language);
         $team_name = self::_geti18n('team_name', $language);
 
+
         if (isset($teams[0]) && isset($teams[1])) {
             //比赛信息
             $event_info = [
@@ -1033,6 +1034,7 @@ class ottService extends common
         foreach ($data as &$val) {
             $val['date'] = date('Y-m-d', $val['start']);
         }
+
         return $data;
     }
 
@@ -1099,19 +1101,6 @@ class ottService extends common
 
         Formatter::format(Formatter::JSON);
         return $list;
-    }
-
-    /**
-     * 获取加密列表
-     * @param $class
-     * @param $scheme
-     * @param $version
-     * @param $format
-     * @return array
-     */
-    private function getEncryptList($class, $scheme, $version, $format):array
-    {
-
     }
 
     /**
@@ -1230,7 +1219,6 @@ class ottService extends common
     {
         $mainClass = Capsule::table('ott_main_class')
                             ->where([
-                                ['use_flag', '=', 1],
                                 ['list_name', '=', $genre]
                             ])
                             ->select(['name', 'list_name', 'is_charge', 'price'])
