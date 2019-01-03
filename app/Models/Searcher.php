@@ -8,7 +8,7 @@
 
 namespace App\Models;
 
-
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Query\Builder;
 
 class Searcher
@@ -99,6 +99,15 @@ class Searcher
         ];
     }
 
+    public function listen()
+    {
+        Capsule::connection()->enableQueryLog();  // 开启QueryLog
+    }
+
+    public function getRawSql()
+    {
+        print_r(Capsule::getQueryLog());
+    }
 
 
 }

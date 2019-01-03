@@ -21,4 +21,5 @@ class VodSearcher extends Searcher
     public $page;
     public $letter;
     public $keyword;
+    public $series;
 }

@@ -207,7 +207,7 @@ class iptvService extends common
              $searcher->cid = $vodList->list_id;
          }
 
-         $query = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple']);
+         $query = Capsule::table('iptv_vod')->select(['vod_id', 'vod_cid', 'vod_name', 'vod_ename', 'vod_type', 'vod_actor', 'vod_director', 'vod_content', 'vod_pic', 'vod_year', 'vod_addtime', 'vod_filmtime', 'vod_ispay', 'vod_price', 'vod_trysee', 'vod_url', 'vod_gold', 'vod_length', 'vod_multiple','vod_series']);
          $searcher->setQuery($query);
          $searcher->filterWhere($searcher->cid,  ['vod_cid', '=', $searcher->cid]);
          $searcher->filterWhere($searcher->name, ['vod_name', 'like', '%'.$searcher->name.'%']);
@@ -216,6 +216,7 @@ class iptvService extends common
          $searcher->filterWhere($searcher->area, ['vod_area', 'like', '%'.$searcher->area.'%']);
          $searcher->filterWhere($searcher->letter, ['vod_letter', '=', $searcher->letter]);
          $searcher->filterWhere($searcher->keyword, ['vod_keywords', 'like', '%'.$searcher->keyword.'%']);
+         $searcher->filterWhere($searcher->series, ['vod_series', '=', $searcher->series]);
 
          $params        = $searcher->getLinkParams(['cid','name','per_page','page']);
          $data['_meta'] = $searcher->getRestMeta();
@@ -236,7 +237,8 @@ class iptvService extends common
                  'self'       => [Url::to('vods/' . $v['vod_id'], ['expand' => 'groupLinks'])],
                  'groupLinks' => ['href' => Url::to("vods/{$v['vod_id']}", ["expand" => "groupLinks"])],
                  'episodes'   => [Url::to("vods/{$v['vod_id']}", ["expand" => "groupLinks"])],
-                 'recommend'  => [Url::to('recommend/' . $v['vod_id'])]
+                 'recommend'  => [Url::to('recommend/' . $v['vod_id'])],
+                 'series' => [$v['vod_series'] ? Url::to('vods',['cid' => $v['vod_cid'],'series' => $v['vod_series']]) : ''],
              ];
          });
 

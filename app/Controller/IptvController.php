@@ -82,6 +82,7 @@ class IptvController extends BaseController
         $searcher->area     = $this->request->get('area') ?? ($this->request->get('vod_language') ?? false);
         $searcher->page     = $this->request->get('page') ?? 1;
         $searcher->per_page = $this->request->get('per_page') ?? 12;
+        $searcher->series = $this->request->get('series');
         $searcher->genre    = ucfirst($this->request->get('genre', 'Movie'));
         $searcher->letter   = strtoupper($this->request->get('letter', ''));
         $searcher->keyword  = strtoupper($this->request->get('keyword', ''));
